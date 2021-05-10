@@ -21,5 +21,5 @@ using System.Runtime.InteropServices;
 //[assembly: AssemblyDelaySign(false)]
 //[assembly: AssemblyKeyFile("")]
 
-[assembly: AssemblyFileVersionAttribute("2019.0.*")]
+[assembly: AssemblyFileVersionAttribute("0.0.0.0")]
 [assembly: ComVisibleAttribute(false)]

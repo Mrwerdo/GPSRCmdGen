@@ -140,7 +140,6 @@ namespace RoboCup.AtHome.GPSRCmdGen
 		/// <param name="args">Arguments given to the application.</param>
 		private static void ParseArgs (string[] args)
 		{
-			int category;
 			Program p = new Program ();
 
 			p.Setup ();
