@@ -129,6 +129,8 @@ namespace RoboCup.AtHome.CommandGenerator
 			foreach (Token token in task.Tokens)
 				PrintMetadata(token, remarks);
 			PrintRemarks(remarks);
+			Console.WriteLine("parse tree:");
+			Console.WriteLine(task.Tree.PrettyTree());
 		}
 
 		/// <summary>

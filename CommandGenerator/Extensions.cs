@@ -145,6 +145,31 @@ namespace RoboCup.AtHome.CommandGenerator
 				list[n] = value;  
 			}  
 		}
+
+		public static string[] SmartSplit(this string s, char c) {
+			List<string> parts = new List<string>();
+			int bcc = 0;
+			int cc = 0;
+			int paranthesisCounter = 0;
+			while (cc < s.Length) {
+				if (s[cc] == '{') {
+					paranthesisCounter += 1;
+				} else if (s[cc] == '}') {
+					paranthesisCounter = Math.Max(paranthesisCounter - 1, 0);
+				}
+
+				if (s[cc] != c || paranthesisCounter > 0) {
+					cc += 1;
+					if (cc != s.Length) {
+						continue;
+					}
+				}
+				parts.Add(s.Substring(bcc, cc - bcc));
+				cc += 1;
+				bcc = cc;
+			}
+			return parts.ToArray();
+		}
 	}
 }
 

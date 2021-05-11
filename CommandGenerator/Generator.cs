@@ -134,11 +134,14 @@ namespace RoboCup.AtHome.CommandGenerator
 			{
 				try
 				{
-					string taskPrototype = GetTaskPrototype(tier);
+					TaskNode root = GetTaskPrototype(tier);
+					string taskPrototype = root.Render();
 					WildcardReplacer replacer = new WildcardReplacer(this, tier);
 					if (String.IsNullOrEmpty(taskPrototype))
 						return null;
-					return replacer.GetTask(taskPrototype);
+					Task t = replacer.GetTask(taskPrototype);
+					t.Tree = root;
+					return t;
 				}
 				catch
 				{
@@ -160,11 +163,14 @@ namespace RoboCup.AtHome.CommandGenerator
 			{
 				try
 				{
-					string taskPrototype = GetTaskPrototype(grammarName);
+					TaskNode root = GetTaskPrototype(grammarName);
+					string taskPrototype = root.Render();
 					WildcardReplacer replacer = new WildcardReplacer(this, tier);
 					if (String.IsNullOrEmpty(taskPrototype))
 						return null;
-					return replacer.GetTask(taskPrototype);
+					Task t = replacer.GetTask(taskPrototype);
+					t.Tree = root;
+					return t;
 				}
 				catch
 				{
@@ -203,14 +209,14 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		/// <param name="tier">The maximum difficulty degree allowed</param>
 		/// <returns>A task sentence prototype with unsolved constructs</returns>
-		protected string GetTaskPrototype (DifficultyDegree tier)
+		protected TaskNode GetTaskPrototype (DifficultyDegree tier)
 		{	
 			Grammar g;
 
 			g = GetRandomGrammar (tier);
 			if (g == null) {
 				Err ("No grammars could be selected. Aborting.");
-				return String.Empty;
+				return null;
 			}
 
 			if(!Quiet){
@@ -237,13 +243,13 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		/// <param name="grammarName">The name of the grammar to generate the task</param>
 		/// <returns>A task sentence prototype with unsolved constructs</returns>
-		protected string GetTaskPrototype (string grammarName)
+		protected TaskNode GetTaskPrototype (string grammarName)
 		{	
 			Grammar g = this.allGrammars.FirstOrDefault( o => o.Name == grammarName );
 			if (g == null)
 			{
 				Err("Grammar " + grammarName + "does not exist. Aborting.");
-				return String.Empty;
+				return null;
 			}
 			if(!Quiet)
 				Console.WriteLine ("Selected {0} grammar.", grammarName);

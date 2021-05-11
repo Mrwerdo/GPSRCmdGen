@@ -97,23 +97,19 @@ namespace RoboCup.AtHome.CommandGenerator
 			return rule.Replacements [rnd.Next (0, max)];
 		}
 
-		/// <summary>
-		/// Generates a random sentence.
-		/// </summary>
-		/// <returns>A randomly generated sentence.</returns>
-		public string GenerateSentence(){
-			return GenerateSentence (new Random (DateTime.Now.Millisecond));
-		}
-
-		/// <summary>
-		/// Generates a random sentence.
-		/// </summary>
-		/// <param name="rnd">Random number generator used to choose the
-		/// productions and generate the sentence</param>
-		/// <returns>A randomly generated sentence.</returns>
-		public string GenerateSentence(Random rnd){
+        /// <summary>
+        /// Generates a random sentence.
+        /// </summary>
+        /// <param name="rnd">Random number generator used to choose the
+        /// productions and generate the sentence</param>
+        /// <returns>A randomly generated sentence.</returns>
+        public TaskNode GenerateSentence(Random rnd)
+        {
 			string option = FindReplacement("$Main", rnd);
-			return SolveNonTerminals (option, rnd);
+			TaskNode root = SolveNonTerminals(option, rnd);
+			root.Term = "$Main";
+			root.Tier = Tier;
+			return root;
 		}
 
 		/// <summary>
@@ -123,7 +119,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="rnd">Random number generator used to choose the
 		/// productions and generate the sentence</param>
 		/// <returns>A string with terminal symbols only</returns>
-		private string SolveNonTerminals (string sentence, Random rnd)
+		private TaskNode SolveNonTerminals (string sentence, Random rnd)
 		{
 			return SolveNonTerminals(sentence, rnd, 0);
 		}
@@ -139,30 +135,26 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// When it reach 1000 the production is aborted.</param>
 		/// <returns>A string with terminal symbols only</returns>
 		/// <remarks>Recursive function</remarks>
-		private string SolveNonTerminals (string sentence, Random rnd, int stackCounter)
+		private TaskNode SolveNonTerminals (string sentence, Random rnd, int stackCounter)
 		{
 			if (++stackCounter > 999)
 				throw new StackOverflowException ();
 
-			int bcc;
-			string replacement;
-			string nonTerminal;
-
-			// Search in sentence for non-terminals
-			int cc = 0;
-			while ( cc < sentence.Length) {
-				if (sentence [cc] != '$') {
-					++cc;
-					continue;
+			TaskNode node = new TaskNode(null);
+			string[] parts = sentence.SmartSplit(' ');
+			foreach (string part in parts) {
+				if (part.Contains("$")) {
+					string replacement = FindReplacement(part, rnd);
+					TaskNode child = SolveNonTerminals(replacement, rnd, stackCounter + 1);
+					child.Term = part;
+					node.Children.Add(child);
+				} else {
+					TaskNode child = new TaskNode(node);
+					child.StringValue = part;
+					node.Children.Add(child);
 				}
-				bcc = cc;
-				nonTerminal = FetchNonTerminal (sentence, ref cc);
-				replacement = FindReplacement (nonTerminal, rnd);
-				replacement = SolveNonTerminals (replacement, rnd, stackCounter);
-				sentence = sentence.Substring (0, bcc) + replacement + sentence.Substring (cc);
-				cc = bcc + replacement.Length;
 			}
-			return sentence;
+			return node;
 		}
 
 		/// <summary>

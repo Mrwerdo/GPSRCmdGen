@@ -15,6 +15,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// Stores the list of grammar's tokens
 		/// </summary>
 		private List<Token> tokens;
+		public TaskNode Tree { get; set; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RoboCup.AtHome.CommandGenerator.Task"/> class.
