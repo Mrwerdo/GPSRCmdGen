@@ -200,12 +200,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="text">Thext to show in the QR code</param>
 		public static void ShowQRDialog(string text)
 		{
-			Thread thread = new Thread(new ThreadStart( () => {
-				RoboCup.AtHome.CommandGenerator.GUI.QRDialog.OpenQRWindow(text);
-				System.Windows.Forms.Application.Run();
-			} ));
-			thread.IsBackground = true;
-			thread.Start();
 		}
 	}
 }

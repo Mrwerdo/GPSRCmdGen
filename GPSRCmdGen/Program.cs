@@ -223,11 +223,6 @@ namespace RoboCup.AtHome.GPSRCmdGen
 
 		private static void GenerateTaskQR(string task, int i, string oDir)
 		{
-			string oFile;
-			System.Drawing.Image qr = CommandGenerator.GUI.QRDialog.GenerateQRBitmap(task, 500);
-			oFile = Path.Combine(oDir, String.Format("Example{0} - {1}.png", i.ToString().PadLeft(3, '0'), task));
-			if (File.Exists(oFile)) File.Delete(oFile);
-			qr.Save(oFile, System.Drawing.Imaging.ImageFormat.Png);
 		}
 	}
 }

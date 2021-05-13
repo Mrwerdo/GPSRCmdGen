@@ -94,7 +94,7 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 			string authoring = Resources.GrammarHeader;
 
 			Dictionary<string, string> grammars = new Dictionary<string, string> ();
-			grammars.Add("egpsr", Resources.EGPSRGrammar);
+			grammars.Add("egpsr", EGPSRCmdGenResources.EGPSRGrammar);
 			/*
 			grammars.Add("eegpsr_cat1", Resources.EGPSR_Category1);
 			grammars.Add("eegpsr_cat2", Resources.EGPSR_Category2);
@@ -106,7 +106,7 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 			grammars.Add("eegpsr_cat2i", Resources.EGPSR_Category2i);
 			grammars.Add("eegpsr_cat3i", Resources.EGPSR_Category3i);
 			*/
-			grammars.Add("common", Resources.CommonRules);
+			grammars.Add("common", EGPSRCmdGenResources.CommonRules);
 
 			foreach (KeyValuePair<string, string> g in grammars) {
 				try{
