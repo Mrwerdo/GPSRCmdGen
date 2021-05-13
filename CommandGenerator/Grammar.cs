@@ -141,7 +141,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				throw new StackOverflowException ();
 
 			TaskNode node = new TaskNode(null);
-			string[] parts = sentence.SmartSplit(' ');
+			string[] parts = ProductionRule.SplitRule(sentence);
 			foreach (string part in parts) {
 				if (part.Contains("$")) {
 					string replacement = FindReplacement(part, rnd);

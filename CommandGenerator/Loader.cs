@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using RoboCup.AtHome.CommandGenerator.Containers;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 
+
 namespace RoboCup.AtHome.CommandGenerator
 {
 	/// <summary>
@@ -173,6 +174,18 @@ namespace RoboCup.AtHome.CommandGenerator
 			return LoadGrammars("grammars");
 		}
 
+		private static string[] FindGrammars(string grammarsDirectoryName) {
+			// Look in current working directory first, then restore to executable directory, then
+			// we are done.
+			string grammarsPath = Path.Combine(Directory.GetCurrentDirectory(),  "Resources");
+			if (Directory.Exists(grammarsPath)) {
+				return Directory.GetFiles(grammarsPath, "*.txt", SearchOption.TopDirectoryOnly);
+			} else {
+				grammarsPath = GetPath(grammarsDirectoryName);
+				return Directory.GetFiles (grammarsPath, "*.txt", SearchOption.TopDirectoryOnly);
+			}
+		}
+
 		/// <summary>
 		/// Loads a list of Grammar objects from the grammars subdirectory.
 		/// </summary>
@@ -180,8 +193,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		public static List<Grammar> LoadGrammars (string grammarsDirectoryName)
 		{
 			Grammar grammar;
-			string grammarsPath = GetPath(grammarsDirectoryName);
-			string[] gfs = Directory.GetFiles (grammarsPath, "*.txt", SearchOption.TopDirectoryOnly);
+            string[] gfs = FindGrammars(grammarsDirectoryName);
 			List<Grammar> grammars = new List<Grammar> (gfs.Length);
 			foreach (string gf in gfs) {
 				grammar = Grammar.LoadFromFile (gf);

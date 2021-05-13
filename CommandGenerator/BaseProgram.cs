@@ -131,6 +131,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			PrintRemarks(remarks);
 			Console.WriteLine("parse tree:");
 			Console.WriteLine(task.Tree.PrettyTree());
+			Console.WriteLine(task.Tree.RenderCommand());
 		}
 
 		/// <summary>

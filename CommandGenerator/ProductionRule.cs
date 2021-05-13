@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Linq;
+using System.Text.Json;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -23,6 +24,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		protected List<string> replacements;
 
+		public ProductionRuleAttributes attributes;
+
 		/// <summary>
 		/// Regular expression for Rule extraction
 		/// </summary>
@@ -37,7 +40,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		static ProductionRule()
 		{
-			rxRuleParser = new Regex (@"\s*(?<name>\$[0-9A-Za-z_]+)\s*=\s*(?<prod>.+)", RegexOptions.Compiled);
+			var s = @"\s*(?<name>\$[0-9A-Za-z_]+)\s*=\s*(?<prod>[^<=>]+)(\<\=\>\s*(?<attrib>.+))?";
+			rxRuleParser = new Regex(s, RegexOptions.Compiled);
 		}
 
 		/// <summary>
@@ -133,7 +137,13 @@ namespace RoboCup.AtHome.CommandGenerator
 				return null;
 			string name = m.Result ("${name}");
 			string prod = m.Result ("${prod}");
+			string attr = m.Result("${attrib}");
 			ProductionRule pr = new ProductionRule (name);
+			if (attr != null && !attr.Equals("")) {
+                var options = new JsonSerializerOptions() { IgnoreNullValues = true };
+                pr.attributes = JsonSerializer.Deserialize<ProductionRuleAttributes>(attr, options);
+				Console.WriteLine("attributes: " + pr.attributes.ToString());
+			}
 			SplitProductions (prod, pr.replacements);
 			return pr;
 		}
@@ -243,6 +253,38 @@ namespace RoboCup.AtHome.CommandGenerator
 		}
 
 		#endregion
+
+		static private Regex nonTerminalIdentifierMatcher = new Regex(@"(\$[0-9A-Za-z_]+)|({.+})");
+
+		/**
+		* Splits a rule , i.e. the right hand side of what this object represents, 
+		* into a list of strings, where each string either does not contain $, or is a valid
+		* non-terminal identifier.
+		*/
+		public static string[] SplitRule(string rule) {
+			List<Match> matches = ProductionRule.nonTerminalIdentifierMatcher.Matches(rule).Cast<Match>().ToList();
+			if (matches.Count == 0) {
+				return new string[] { rule };
+			}
+			var tokens = new List<string>();
+			var first = matches.First();
+			if (first.Index != 0) {
+				tokens.Add(rule.Substring(0, first.Index));
+			}
+			tokens.Add(rule.Substring(first.Index, first.Length));
+			int nextIndex = first.Index + first.Length;
+			foreach (Match m in matches.Skip(1)) {
+				if (nextIndex != m.Index) {
+					tokens.Add(rule.Substring(nextIndex, m.Index - nextIndex));
+				}
+				tokens.Add(rule.Substring(m.Index, m.Length));
+				nextIndex = m.Index + m.Length;
+			}
+			if (nextIndex != rule.Length) {
+				tokens.Add(rule.Substring(nextIndex, rule.Length - nextIndex));
+			}
+			return tokens.ToArray();
+		}
 	}
 }
 

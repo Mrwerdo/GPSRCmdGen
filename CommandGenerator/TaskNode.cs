@@ -36,6 +36,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		public List<TaskNode> Children { get; private set; }
 		public string StringValue { get; set; }
 		public string Term { get; set; }
+		public ProductionRuleAttributes attributes { get; set; }
 
 		public TaskNode(TaskNode parent, Nullable<DifficultyDegree> tier = null) {
 			_tier = tier;

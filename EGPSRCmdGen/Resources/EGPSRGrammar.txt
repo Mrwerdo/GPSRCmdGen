@@ -45,8 +45,8 @@ $task      = $descobj
 $task      = $retrieve
 
 ; Doors
-$task      = open the (entrance | exit | corridor) door
-$task      = close the (entrance | exit | corridor) door
+$task      = open the (entrance | exit | corridor) door     <=> { "Name": "Open" }
+$task      = close the (entrance | exit | corridor) door    <=> { "Name": "Close" }
 
 ; Find object
 $task      = $vbfind the {sobject} in the {room}
@@ -83,7 +83,17 @@ $report    = $vbreport $repwho
 
 # Describe object
 ####################################################################
-$descobj  = describe the objects in the {placement} to $repwho
+; The <=> separates the production in the grammar from the production metadata.
+; Each instance from a class of productions needs to be uniquely identified and
+; mapped into a command somehow. I could do string replacement, or we could come
+; up with a way of describing the grammar's metadata and use it to render the tree.
+; I need to know the name of the command. I can probably write code that can
+; convert a named subtree into a command. The string that appears after <=> is 
+; a single line of json data. This means that parsing is easy! The attributes can
+; be accessed by the renderer as metadata on the TaskNode. The syntax is flexible
+; so someone can write a new command language without breaking the program. Great!
+; The attributes will also be stored on a production in the grammar.
+$descobj  = describe the objects in the {placement} to $repwho      <=> { "Name": "Describe" }
 
 # Describe person
 ####################################################################

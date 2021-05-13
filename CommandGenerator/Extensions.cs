@@ -146,6 +146,10 @@ namespace RoboCup.AtHome.CommandGenerator
 			}  
 		}
 
+		/// <summary>
+		/// Context free grammar and where clause aware split. This function splits by non-terminal identifiers
+		/// provided they are not inside of a where clause (i.e. curly braces).
+		/// </summary>
 		public static string[] SmartSplit(this string s, char c) {
 			List<string> parts = new List<string>();
 			int bcc = 0;
