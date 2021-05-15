@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -88,6 +88,11 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="pr">The production rule whose replacements will be added</param>
 		public void AddReplacements (ProductionRule pr)
 		{
+			// var productions = new List<string>();
+			// foreach (string r in pr.Replacements) {
+			// 	ProductionRule.SplitProductions(r, productions);
+			// }
+			// pr.replacements = productions;
 			if (pr.NonTerminal != this.NonTerminal)
 				return;
 			foreach (string replacement in pr.replacements) {
@@ -138,15 +143,121 @@ namespace RoboCup.AtHome.CommandGenerator
 			string name = m.Result ("${name}");
 			string prod = m.Result ("${prod}");
 			string attr = m.Result("${attrib}");
-			ProductionRule pr = new ProductionRule (name);
+			ProductionRule pr = new(name);
 			if (attr != null && !attr.Equals("")) {
                 var options = new JsonSerializerOptions() { IgnoreNullValues = true };
                 pr.attributes = JsonSerializer.Deserialize<ProductionRuleAttributes>(attr, options);
 				Console.WriteLine("attributes: " + pr.attributes.ToString());
 			}
 			SplitProductions (prod, pr.replacements);
+			ExpandBranchExpression(prod);
 			return pr;
 		}
+
+		// Given a sentence "a b (c | d | (e | f) g) h i (j | k)" produce an array consisting of these strings:
+		//     a b c h i j
+		//     a b c h i k
+		//     a b d h i j
+		//     a b d h i k
+		//     a b e g h i j
+		//     a b e g h i k
+		//     a b f g h i j
+		//     a b f g h i k
+		//
+		// Cases to handle are:
+		// 1. The entire sentence is literal.
+		// 2. The sentence starts and ends with a literal but contains a branch expression.
+		// 3. The sentences contains multiple branching expressions.
+		// 4. Nested parenthesis.
+		// Undefined behaviour? What happens when parenthesis are unbalanced?
+		public static string[] ExpandBranchExpression(string sentence) {
+			var parts = new List<(int Start, int End)> ();
+
+			int cc = 0;
+			int bcc = 0;
+			int parenthesisCount = 0;
+			while (cc < sentence.Length) {
+				if (sentence[cc] == '(') {
+					parenthesisCount += 1;
+				} else if (sentence[cc] == ')') {
+					if (parenthesisCount > 0) {
+						parenthesisCount -= 1;
+					} else {
+						return null;
+					}
+				}
+
+				if (sentence[cc] != '(') {
+					cc += 1;
+					continue;
+				}
+
+				if (cc - bcc > 0) {
+					parts.Add((bcc, cc-1));
+				}
+
+				bcc = cc;
+				cc += 1;
+				if (!FindClosePar(sentence, ref cc)) {
+					return null;
+				}
+				parenthesisCount -= 1;
+				parts.Add((bcc, cc));
+				cc += 1;
+				bcc = cc;
+			}
+			if (cc - bcc > 0) {
+				parts.Add((bcc, cc-1));
+			}
+
+			var branches = new List<string[]>();
+			foreach (var (Start, End) in parts) {
+				if (sentence[Start] == '(' && sentence[End] == ')' && End - Start > 1) {
+					var subsentence = sentence[(Start+1)..End];
+					branches.Add(ExpandBranchExpression(subsentence));
+				} else {
+                    branches.Add(new string[] { sentence[Start..(End + 1)] });
+				}
+			}
+			
+			var results = new List<string>();
+			ComputeWaysThroughBranches(results, branches);
+			return results.ToArray();
+		}
+
+		private static string[] SplitKeepOuterSpaces(string s, char c) 
+		{
+			string[] parts = s.Split(c);
+			if (parts.Length > 2) {
+				for (int i = 1; i < parts.Length - 1; i += 1) {
+					parts[i] = parts[i].Trim();
+				}
+			}
+			if (parts.Length > 1) {
+				parts[0] = parts[0].TrimEnd();
+				parts[^1] = parts[^1].TrimStart();
+			}
+			return parts;
+		}
+
+        private static void ComputeWaysThroughBranches(
+            List<string> results,
+            List<string[]> branches,
+            string partialSentence = "",
+            int depth = 0)
+        {
+            if (depth == branches.Count)
+            {
+                results.Add(partialSentence);
+            }
+            else
+            {
+                foreach (var child in branches[depth])
+                {
+                    ComputeWaysThroughBranches(results, branches, partialSentence + child, depth + 1);
+                }
+            }
+        }
 
 		/// <summary>
 		/// if s = '(' + s1 + ')', returns s1, otherwise returns s
@@ -172,13 +283,16 @@ namespace RoboCup.AtHome.CommandGenerator
 		}
 
 		/// <summary>
-		/// Splits a compose production rule (one with parentheses and OR symbols)
+		/// Splits a compose production rule (one with parenthesis and OR symbols)
 		/// into a list of single production rules
 		/// </summary>
 		/// <param name="s">The original production rule</param>
 		/// <param name="productions">A list to store the derived poduction rules</param>
 		public static void SplitProductions (string s, List<string> productions)
 		{
+			// fixme: split s = ( a | b | (c | d )) into nested productions.
+			// I can see why they abonded this algorithm in faviour of the other one.
+			// This one does not handle nested parenthesis but the other one does.
 			int cc = 0;
 			int bcc = 0;
 			string prod;

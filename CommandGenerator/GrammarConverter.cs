@@ -81,7 +81,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			{
 				SRGSWriteHeader();
 				SRGSWriteMainRule();
-				foreach (var productionRule in grammar.ProductionRules.Values)
+				foreach (var productionRule in grammar.ProductionRules)
 				{
 					if (productionRule.NonTerminal == "$Main") continue;
 					SRGSWriteProductionRule(productionRule);
@@ -177,7 +177,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		private void SRGSWriteMainRule()
 		{
-			ProductionRule main = grammar.ProductionRules["$Main"];
+			ProductionRule main = grammar.GetRule("$Main");
 			writer.WriteStartElement("rule");
 			writer.WriteAttributeString("id", "main");
 			writer.WriteAttributeString("scope", "public");

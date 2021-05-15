@@ -44,16 +44,31 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		public DifficultyDegree Tier{ get; set;	}
 
-		/// <summary>
-		/// Gets the set of production rules (accessible by rule name)
-		/// </summary>
-		internal Dictionary<string, ProductionRule> ProductionRules {
-			get{ return this.productionRules;}
+		public IEnumerable<ProductionRule> ProductionRules {
+			get {
+				return this.productionRules.Values;
+			}
 		}
 
 		#endregion
 
 		#region Methods
+
+		public ProductionRule GetRule(string nonTerminalIdentifier) {
+			return productionRules[nonTerminalIdentifier];
+		}
+
+		public bool ContainsRule(string nonTerminalIdentifier) {
+			return productionRules.ContainsKey(nonTerminalIdentifier);
+		}
+
+		public void AddRule(ProductionRule rule) {
+			if (ContainsRule(rule.NonTerminal)) {
+				productionRules[rule.NonTerminal].AddReplacements(rule);
+			} else {
+				productionRules.Add(rule.NonTerminal, rule);
+			}
+		}
 
 		/// <summary>
 		/// Retrieves the non-terminal symbol within the input string pointed by cc

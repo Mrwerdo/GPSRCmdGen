@@ -1,0 +1,11 @@
+{
+    "dotnet-test-explorer.testProjectPath": "CommandGenerator",
+    "dotnet-test-explorer.enableTelemetry": false,
+    "omnisharp.enableRoslynAnalyzers": true,
+    "omnisharp.organizeImportsOnFormat": true,
+    "csharp.unitTestDebuggingOptions": {
+        "logging": {
+            "moduleLoad": false
+        }
+    }
+}

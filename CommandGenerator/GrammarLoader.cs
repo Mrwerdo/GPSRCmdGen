@@ -54,7 +54,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				StripCommentsAndEmptyLines ();
 
 				ParseProductionRules ();
-				if (requireMainNT && !grammar.productionRules.ContainsKey ("$Main"))
+				if (requireMainNT && !grammar.ContainsRule ("$Main"))
 					return null;
 				return grammar;
 			}
@@ -66,14 +66,12 @@ namespace RoboCup.AtHome.CommandGenerator
 			/// </summary>
 			/// <param name="ruleDicc">A given rule dictionary having the non-terminal
 			/// symbol as key and the production rule as value.</param>
-			private static void ExpandRules(Dictionary<string, ProductionRule> ruleDicc)
+			private static void ExpandRules(Grammar grammar)
 			{
-				List<ProductionRule> ruleList = new List<ProductionRule>(2 * ruleDicc.Count);
-				foreach (KeyValuePair<string,ProductionRule> p in ruleDicc)
-					ruleList.Add (p.Value);
+				List<ProductionRule> ruleList = new List<ProductionRule>(grammar.ProductionRules);
 
 				for (int ix = 0; ix < ruleList.Count; ++ix) {
-					ExpandRule (ix, ruleList, ruleDicc);
+                    ExpandRule(ix, ruleList, grammar);
 				}
 			}
 
@@ -87,7 +85,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			/// elements accessible by index in O(1).</param>
 			/// <param name="ruleDicc">The set of production rules of the grammar with
 			/// elements accessible by non-terminal symbol in O(1).</param>
-			private static void ExpandRule (int ix, List<ProductionRule> ruleList, Dictionary<string, ProductionRule> ruleDicc)
+			private static void ExpandRule (int ix, List<ProductionRule> ruleList, Grammar grammar)
 			{
 				if (ix >= ruleList.Count)
 					return;
@@ -111,11 +109,11 @@ namespace RoboCup.AtHome.CommandGenerator
 						// Get the replacement (subchunk)
 						string subchunk = replacement.Substring (bcc, cc - bcc);
 						// Generate a Non-Terminal symbol (name) for the replacement
-						nonTerminal = GenerateNonTerminal(pr.NonTerminal, ref nonTerminalBaseIndex, ruleDicc);
+						nonTerminal = GenerateNonTerminal(pr.NonTerminal, ref nonTerminalBaseIndex, grammar);
 						// Create and add the production rule
 						ProductionRule cpr = ProductionRule.FromString(nonTerminal+" = "+subchunk);
 						ruleList.Add (cpr);
-						ruleDicc.Add (cpr.NonTerminal, cpr);
+						grammar.AddRule(cpr);
 						// Replace the subchunk with the Non-Terminal symbol
 						replacement = replacement.Substring (0, bcc-1) + nonTerminal + replacement.Substring (cc+1);
 						pr.Replacements [i] = replacement;
@@ -133,14 +131,14 @@ namespace RoboCup.AtHome.CommandGenerator
 			/// new non-terminal symbol.</param>
 			/// <param name="ix">The index of the current production</param>
 			/// <param name="ruleDicc">The dictionary containing all the rules of the grammar</param>
-			private static string GenerateNonTerminal (string parentNonTerminal, ref int ix, Dictionary<string, ProductionRule> ruleDicc)
+			private static string GenerateNonTerminal (string parentNonTerminal, ref int ix, Grammar grammar)
 			{
 				string nonTerminal;
 				string prefix = parentNonTerminal + "_";
 				do {
 					nonTerminal = prefix + ix.ToString ();
 					++ix;
-				} while(ruleDicc.ContainsKey(nonTerminal));
+				} while(grammar.ContainsRule(nonTerminal));
 				return nonTerminal;
 			}
 
@@ -160,11 +158,8 @@ namespace RoboCup.AtHome.CommandGenerator
 				Grammar subGrammar = new GrammarLoader().FromFile(path, false);
 				if(subGrammar == null)
 					return;
-				foreach(var item in subGrammar.productionRules){
-					if(grammar.productionRules.ContainsKey(item.Key))
-						grammar.productionRules[item.Key].AddReplacements(item.Value);
-					else
-						grammar.productionRules.Add(item.Key, item.Value);
+				foreach(var rule in subGrammar.ProductionRules){
+					grammar.AddRule(rule);
 				}
 
 			}
@@ -189,14 +184,12 @@ namespace RoboCup.AtHome.CommandGenerator
 				Grammar subGrammar = new GrammarLoader().FromFile(path, false);
 				if(subGrammar == null)
 					return;
-				subGrammar.productionRules.Remove("$Main");
-				foreach(var item in subGrammar.productionRules){
-					if(grammar.productionRules.ContainsKey(item.Key))
-						grammar.productionRules[item.Key].AddReplacements(item.Value);
-					else
-						grammar.productionRules.Add(item.Key, item.Value);
-				}
-			}
+                foreach (var rule in subGrammar.ProductionRules)
+                {
+                    if (rule.NonTerminal == "$Main") continue;
+					grammar.AddRule(rule);
+                }
+            }
 
 			/// <summary>
 			/// Imports production tules from another grammar file into a non-terminal
@@ -218,10 +211,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				if(!File.Exists(path)){
 					errMsg = String.Format(errMsg, String.Format("File {0} not found", path));
 					pr = new ProductionRule(nonTerminal, new String[]{errMsg});
-					if(grammar.productionRules.ContainsKey(nonTerminal))
-						grammar.productionRules[nonTerminal].AddReplacements(pr);
-					else
-						grammar.productionRules.Add(nonTerminal, pr);
+					grammar.AddRule(pr);
 					return;
 				}
 
@@ -229,28 +219,13 @@ namespace RoboCup.AtHome.CommandGenerator
 				if(subGrammar == null){
 					errMsg = String.Format(errMsg, String.Format("Cannot load grammar file {0}", path));
 					pr = new ProductionRule(nonTerminal, new String[]{errMsg});
-					if(grammar.productionRules.ContainsKey(nonTerminal))
-						grammar.productionRules[nonTerminal].AddReplacements(pr);
-					else
-						grammar.productionRules.Add(nonTerminal, pr);
+					grammar.AddRule(pr);
 					return;
 				}
 
 				errMsg = String.Format(errMsg, "Not implemented. Sorry =(");
 				pr = new ProductionRule(nonTerminal, new String[]{errMsg});
-				if(grammar.productionRules.ContainsKey(nonTerminal))
-					grammar.productionRules[nonTerminal].AddReplacements(pr);
-				else
-					grammar.productionRules.Add(nonTerminal, pr);
-
-				// var main = subGrammar.productionRules["$Main"];
-				// subGrammar.productionRules.Remove("$Main");
-				// foreach(var item in subGrammar.productionRules){
-				// 	if(grammar.productionRules.ContainsKey(item.Key))
-				// 		grammar.productionRules[item.Key].AddReplacements(item.Value);
-				// 	else
-				// 		grammar.productionRules.Add(item.Key, item.Value);
-				// }
+				grammar.AddRule(pr);
 			}
 
 			/// <summary>
@@ -317,19 +292,13 @@ namespace RoboCup.AtHome.CommandGenerator
 			private void ParseProductionRules()
 			{
 				ProductionRule pr;
-				Dictionary<string, ProductionRule> prsd = grammar.productionRules;
-
-				// prsd = new Dictionary<string, ProductionRule> ();
 				foreach (string line in lines) {
 					pr = ProductionRule.FromString (line);
 					if ((pr == null) || (pr.Replacements.Count < 1))
 						continue;
-					if (prsd.ContainsKey (pr.NonTerminal))
-						prsd[pr.NonTerminal].AddReplacements(pr);
-					else
-						prsd.Add (pr.NonTerminal, pr);
+					grammar.AddRule(pr);
 				}
-				ExpandRules (prsd);
+                ExpandRules(grammar);
 			}
 
 			/// <summary>
