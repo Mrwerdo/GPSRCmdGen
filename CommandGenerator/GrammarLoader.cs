@@ -104,7 +104,7 @@ namespace RoboCup.AtHome.CommandGenerator
 						// Increase reading header to the char at the right of the left par
 						int bcc = ++cc; 
 						// and find the closing parenthesis
-						if (!ProductionRule.FindClosePar (replacement, ref cc))
+						if (!Scanner.FindClosingParenthesis (replacement, ref cc))
 							break;
 						// Get the replacement (subchunk)
 						string subchunk = replacement.Substring (bcc, cc - bcc);

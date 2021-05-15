@@ -149,96 +149,87 @@ namespace RoboCup.AtHome.CommandGenerator
                 pr.attributes = JsonSerializer.Deserialize<ProductionRuleAttributes>(attr, options);
 				Console.WriteLine("attributes: " + pr.attributes.ToString());
 			}
-			SplitProductions (prod, pr.replacements);
-			ExpandBranchExpression(prod);
+			var replacements = ExpandBranchExpression(prod);
+			if (replacements == null) {
+				Console.WriteLine($"Invalid expression: {prod}");
+				pr.replacements = new ();
+				pr.replacements.Add(prod);
+			} else {
+                pr.replacements = new List<string>(replacements);
+			}
 			return pr;
 		}
 
-		// Given a sentence "a b (c | d | (e | f) g) h i (j | k)" produce an array consisting of these strings:
-		//     a b c h i j
-		//     a b c h i k
-		//     a b d h i j
-		//     a b d h i k
-		//     a b e g h i j
-		//     a b e g h i k
-		//     a b f g h i j
-		//     a b f g h i k
-		//
-		// Cases to handle are:
-		// 1. The entire sentence is literal.
-		// 2. The sentence starts and ends with a literal but contains a branch expression.
-		// 3. The sentences contains multiple branching expressions.
-		// 4. Nested parenthesis.
-		// Undefined behaviour? What happens when parenthesis are unbalanced?
-		public static string[] ExpandBranchExpression(string sentence) {
-			var parts = new List<(int Start, int End)> ();
+        /// <summary>
+        /// Splits a compose production rule (one with parenthesis and OR symbols)
+        /// into a list of single production rules
+		/// <example>
+        /// Given a sentence "a b (c | d | (e | f) g) h i (j | k)" produce an array consisting of these strings:
+        ///     a b c h i j
+        ///     a b c h i k
+        ///     a b d h i j
+        ///     a b d h i k
+        ///     a b e g h i j
+        ///     a b e g h i k
+        ///     a b f g h i j
+        ///     a b f g h i k
+		/// </example>
+        /// </summary>
+        /// <param name="s">The original production rule</param>
+        /// <param name="productions">A list to store the derived poduction rules</param>
+        /// <returns>Null if the input sentence contains unbalanced parenthesis.</returns>
+        public static string[] ExpandBranchExpression(string sentence)
+        {
+            if (!Scanner.IsValidParenthesisExpression(sentence, '(', ')'))
+            {
+                return null;
+            }
+            return ExpandBranchExpresionGuarenteeValidResult(sentence);
+        }
 
-			int cc = 0;
-			int bcc = 0;
-			int parenthesisCount = 0;
-			while (cc < sentence.Length) {
-				if (sentence[cc] == '(') {
-					parenthesisCount += 1;
-				} else if (sentence[cc] == ')') {
-					if (parenthesisCount > 0) {
-						parenthesisCount -= 1;
-					} else {
-						return null;
-					}
-				}
+        // Guarentees non-null result, even though various methods might return null given
+        // an input string with mismatched parenthesis, we make the assumption that sentence
+        // has a valid parenthesis expression.
+        private static string[] ExpandBranchExpresionGuarenteeValidResult(string sentence)
+        {
+            var results = new List<string>();
+            var topLevelBranches = Scanner.SplitRespectingParenthesis(sentence);
+            foreach (var branch in topLevelBranches)
+            {
+                var parts = ExpandNestedBranch(branch).Select((t, i) => t.Trim());
+                results.AddRange(parts);
+            }
+            return results.ToArray();
+        }
 
-				if (sentence[cc] != '(') {
-					cc += 1;
-					continue;
-				}
+        private static string[] ExpandNestedBranch(string sentence)
+        {
+            var parts = Scanner.FindParenthesisRanges(sentence);
 
-				if (cc - bcc > 0) {
-					parts.Add((bcc, cc-1));
-				}
+            var branches = new List<string[]>();
+            foreach (var (Start, End) in parts)
+            {
+                if (sentence[Start] == '(' && sentence[End] == ')' && End - Start > 1)
+                {
+                    var subsentence = sentence[(Start + 1)..End];
+                    branches.Add(ExpandBranchExpression(subsentence));
+                }
+                else
+                {
+                    var subsentence = sentence[Start..(End + 1)];
+                    if (subsentence.Contains('|'))
+                    {
+                        // Logical error.
+                        throw new Exception($"{subsentence} contains a branch");
+                    }
+                    branches.Add(new string[] { subsentence });
+                }
+            }
 
-				bcc = cc;
-				cc += 1;
-				if (!FindClosePar(sentence, ref cc)) {
-					return null;
-				}
-				parenthesisCount -= 1;
-				parts.Add((bcc, cc));
-				cc += 1;
-				bcc = cc;
-			}
-			if (cc - bcc > 0) {
-				parts.Add((bcc, cc-1));
-			}
-
-			var branches = new List<string[]>();
-			foreach (var (Start, End) in parts) {
-				if (sentence[Start] == '(' && sentence[End] == ')' && End - Start > 1) {
-					var subsentence = sentence[(Start+1)..End];
-					branches.Add(ExpandBranchExpression(subsentence));
-				} else {
-                    branches.Add(new string[] { sentence[Start..(End + 1)] });
-				}
-			}
-			
-			var results = new List<string>();
-			ComputeWaysThroughBranches(results, branches);
-			return results.ToArray();
-		}
-
-		private static string[] SplitKeepOuterSpaces(string s, char c) 
-		{
-			string[] parts = s.Split(c);
-			if (parts.Length > 2) {
-				for (int i = 1; i < parts.Length - 1; i += 1) {
-					parts[i] = parts[i].Trim();
-				}
-			}
-			if (parts.Length > 1) {
-				parts[0] = parts[0].TrimEnd();
-				parts[^1] = parts[^1].TrimStart();
-			}
-			return parts;
-		}
+            var results = new List<string>();
+            ComputeWaysThroughBranches(results, branches);
+            return results.ToArray();
+        }
 
         private static void ComputeWaysThroughBranches(
             List<string> results,
@@ -258,113 +249,6 @@ namespace RoboCup.AtHome.CommandGenerator
                 }
             }
         }
-
-		/// <summary>
-		/// if s = '(' + s1 + ')', returns s1, otherwise returns s
-		/// </summary>
-		/// <param name="s">String to process</param>
-		protected internal static void RemoveTopLevelPar(ref string s){
-			if ((s.Length < 1) || (s [0] == '('))
-				return;
-
-			int i;
-			StringBuilder sb = new StringBuilder (s.Length);
-			for (i = 0; i < s.Length -1; ++i) {
-				if (s [i] == '\\'){
-					++i;
-					continue;
-				}
-				else if ((s [i] == '(') || (s [i] == '|') || (s [i] == ')'))
-					return;
-				sb.Append(s[i]);
-			}
-			if (s [i] == ')')
-				s = sb.ToString ();
-		}
-
-		/// <summary>
-		/// Splits a compose production rule (one with parenthesis and OR symbols)
-		/// into a list of single production rules
-		/// </summary>
-		/// <param name="s">The original production rule</param>
-		/// <param name="productions">A list to store the derived poduction rules</param>
-		public static void SplitProductions (string s, List<string> productions)
-		{
-			// fixme: split s = ( a | b | (c | d )) into nested productions.
-			// I can see why they abonded this algorithm in faviour of the other one.
-			// This one does not handle nested parenthesis but the other one does.
-			int cc = 0;
-			int bcc = 0;
-			string prod;
-
-			while (cc < s.Length) {
-				if (s [cc] == '\\') {
-					cc+= 2;
-					continue;
-				}
-				if (s [cc] == '(') {
-					++cc;
-					if (!FindClosePar (s, ref cc))
-						return;
-				}
-				if (s [cc] == '|') {
-					prod = s.Substring (bcc, cc - bcc).Trim ();
-					productions.Add (prod);
-					bcc = cc + 1;
-				}
-				++cc;
-			}
-			if ((cc - bcc) <= 0) {
-				productions.Clear ();
-				return;
-			}
-			prod = s.Substring (bcc, cc - bcc).Trim ();
-			RemoveTopLevelPar (ref prod);
-			productions.Add (prod);
-		}
-
-		/// <summary>
-		/// Gets a value indicating if the provided string is an expandable production.
-		/// An expandable production is a rule which can be split into two or more
-		/// new production tules
-		/// </summary>
-		/// <param name="replacement">The replacement (right part) string of a production rule</param>
-		/// <returns><c>true</c> if the provided string is an expandable production; otherwise, <c>false</c>.</returns>
-		internal static bool IsExpandable (string replacement)
-		{
-			if(String.IsNullOrEmpty(replacement)) return false;
-			for(int i = 0; i < replacement.Length; ++i){
-				if (replacement [i] == '\\'){
-					++i;
-					continue;
-				}
-				else if ( replacement[i] == '(')
-					return true;
-			}
-			return false;
-		}
-
-		/// <summary>
-		/// Finds the close parenthesis.
-		/// </summary>
-		/// <returns><c>true</c>, if close parenthesis par was found, <c>false</c> otherwise.</returns>
-		/// <param name="s">string to look inside</param>
-		/// <param name="cc">Read header.
-		/// Must be pointing to the next character of an open parenthesis within the string s</param>
-		protected internal static bool FindClosePar(string s, ref int cc){
-			int par = 1;
-			while ((cc < s.Length) && (par > 0)) {
-				if (s [cc] == '\\') {
-					cc+= 2;
-					continue;
-				}
-				if (s [cc] == '(') ++par;
-				else if (s [cc] == ')') --par;
-				++cc;
-			}
-			--cc;
-			return par == 0;
-		}
 
 		#endregion
 

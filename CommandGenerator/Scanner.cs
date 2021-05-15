@@ -456,5 +456,162 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
 			return ((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'Z'));
 		}
-	}
+
+		/// <summary>
+		/// Gets a value indicating if the provided string is an expandable production.
+		/// An expandable production is a rule which can be split into two or more
+		/// new production tules
+		/// </summary>
+		/// <param name="replacement">The replacement (right part) string of a production rule</param>
+		/// <returns><c>true</c> if the provided string is an expandable production; otherwise, <c>false</c>.</returns>
+		public static bool IsExpandable (string replacement)
+		{
+			if(String.IsNullOrEmpty(replacement)) return false;
+			for(int i = 0; i < replacement.Length; ++i){
+				if (replacement [i] == '\\'){
+					++i;
+					continue;
+				}
+				else if ( replacement[i] == '(')
+					return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Finds the close parenthesis.
+		/// </summary>
+		/// <returns><c>true</c>, if close parenthesis par was found, <c>false</c> otherwise.</returns>
+		/// <param name="s">string to look inside</param>
+		/// <param name="cc">Read header.
+		/// Must be pointing to the next character of an open parenthesis within the string s</param>
+		public static bool FindClosingParenthesis(string s, ref int cc){
+			int par = 1;
+			while ((cc < s.Length) && (par > 0)) {
+				if (s [cc] == '\\') {
+					cc+= 2;
+					continue;
+				}
+				if (s [cc] == '(') ++par;
+				else if (s [cc] == ')') --par;
+				++cc;
+			}
+			--cc;
+			return par == 0;
+		}
+
+		/// <summary>
+		/// if s = '(' + s1 + ')', returns s1, otherwise returns s
+		/// </summary>
+		/// <param name="s">String to process</param>
+		public static void RemoveTopLevelPar(ref string s){
+			if ((s.Length < 1) || (s [0] == '('))
+				return;
+
+			int i;
+			StringBuilder sb = new StringBuilder (s.Length);
+			for (i = 0; i < s.Length -1; ++i) {
+				if (s [i] == '\\'){
+					++i;
+					continue;
+				}
+				else if ((s [i] == '(') || (s [i] == '|') || (s [i] == ')'))
+					return;
+				sb.Append(s[i]);
+			}
+			if (s [i] == ')')
+				s = sb.ToString ();
+		}
+
+        public static bool IsValidParenthesisExpression(string sentence, char open, char close)
+        {
+            int count = 0;
+            foreach (char c in sentence)
+            {
+                if (c == open)
+                {
+                    count += 1;
+                }
+                else if (c == close)
+                {
+                    if (count > 0)
+                    {
+                        count -= 1;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            return count == 0;
+        }
+
+        public static string[] SplitRespectingParenthesis(string s)
+        {
+			var results = new List<string>();
+
+			int cc = 0;
+			int bcc = 0;
+			while (cc < s.Length) {
+                if (s[cc] == '(')
+                {
+					cc += 1;
+                    if (!FindClosingParenthesis(s, ref cc))
+                    {
+                        return null;
+                    }
+                }
+                if (s[cc] == '|')
+                {
+                    results.Add(s[bcc..cc]);
+					cc += 1;
+					bcc = cc;
+				}
+				cc += 1;
+			}
+
+			if (cc - bcc > 0) {
+				results.Add(s[bcc..cc]);
+			}
+
+			return results.ToArray();
+		}
+
+        public static List<(int Start, int End)> FindParenthesisRanges(string sentence)
+        {
+            var parts = new List<(int Start, int End)>();
+
+            int cc = 0;
+            int bcc = 0;
+            while (cc < sentence.Length)
+            {
+                if (sentence[cc] != '(')
+                {
+                    cc += 1;
+                    continue;
+                }
+
+                if (cc - bcc > 0)
+                {
+                    parts.Add((bcc, cc - 1));
+                }
+
+                bcc = cc;
+                cc += 1;
+                if (!FindClosingParenthesis(sentence, ref cc))
+                {
+					return null;
+                }
+                parts.Add((bcc, cc));
+                cc += 1;
+                bcc = cc;
+            }
+            if (cc - bcc > 0)
+            {
+                parts.Add((bcc, cc - 1));
+            }
+            return parts;
+        }
+    }
 }
