@@ -10,7 +10,7 @@ namespace RoboCup.AtHome.CommandGenerator.Containers
 	/// Helper class. Implements a container for (de)serlaizing categories
 	/// </summary>
 	[XmlRoot(ElementName = "questions", Namespace = "")]
-	public class QuestionsContainer
+    public class QuestionsContainer : ILoadingContainer<PredefinedQuestion>
 	{
 
 		/// <summary>
@@ -30,5 +30,12 @@ namespace RoboCup.AtHome.CommandGenerator.Containers
 		/// <value>The questions.</value>
 		[XmlElement("question")]
 		public List<PredefinedQuestion> Questions { get; set; }
+
+		public List<PredefinedQuestion> Results
+		{
+			get {
+				return Questions;
+			}
+		}
 	}
 }

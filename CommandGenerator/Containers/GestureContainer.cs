@@ -10,7 +10,7 @@ namespace RoboCup.AtHome.CommandGenerator.Containers
 	/// Helper class. Implements a container for (de)serlaizing gestures  
 	/// </summary>
 	[XmlRoot(ElementName = "gestures", Namespace = "")]
-	public class GestureContainer
+	public class GestureContainer : ILoadingContainer<Gesture>
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RoboCup.AtHome.CommandGenerator.GestureContainer"/> class.
@@ -28,5 +28,11 @@ namespace RoboCup.AtHome.CommandGenerator.Containers
 		/// </summary>
 		[XmlElement("gesture")]
 		public List<Gesture> Gestures { get; set; }
+
+		public List<Gesture> Results { 
+			get {
+                return Gestures;
+			}
+		}
 	}
 }

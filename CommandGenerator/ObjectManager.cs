@@ -131,23 +131,6 @@ namespace RoboCup.AtHome.CommandGenerator
 			return this.categories.Values.GetEnumerator ();
 		}
 
-		/*
-
-		IEnumerator<GPSRObject> System.Collections.Generic.IEnumerable<GPSRObject>.GetEnumerator ()
-		{
-			return this.objects.GetEnumerator ();
-		}
-
-		IEnumerator<Location> System.Collections.Generic.IEnumerable<Location>.GetEnumerator ()
-		{
-			List<Location> l = new List<Location> (this.categories.Count);
-			for (int i = 0; i < this.categories.Count; ++i)
-				l.Add (this.categories [i].DefaultLocation);
-			return l.GetEnumerator ();
-		}
-		
-		*/
-
 		#endregion
 
 		#region IEnumerable implementation

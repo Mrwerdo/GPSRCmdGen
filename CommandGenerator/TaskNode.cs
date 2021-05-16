@@ -86,6 +86,9 @@ namespace RoboCup.AtHome.CommandGenerator
 			string idt = new('.', indent * 2);
 			if (IsNonTerminal) {
 				output += idt + "-> " + Value;
+				if (Replacement != null && Replacement.Rule.Attributes != null) {
+					output += Replacement.Rule.Attributes.ToString().Indent(indent);
+				}
 				if (Children.Count > 0) {
 					output += "\n";
 				}

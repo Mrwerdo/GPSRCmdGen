@@ -200,25 +200,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		}
 
 		#endregion
-
-		#region Static Methods
-
-		/// <summary>
-		/// Loads a grammar from a text file.
-		/// </summary>
-		/// <param name="filePath">The grammar file path.</param>
-		/// <param name="requireMainNT">Specifies whether a Main rule is required to load the grammar.</param>
-		/// <returns>The grammar represented within the provided file, or null
-		/// if the grammar could not be loadder.</returns>
-		public static Grammar LoadFromFile (string filePath)
-		{
-			if (!File.Exists (filePath))
-				return null;
-
-			return new GrammarLoader ().FromFile (filePath);
-		}
-
-		#endregion
 	}
 }
 	

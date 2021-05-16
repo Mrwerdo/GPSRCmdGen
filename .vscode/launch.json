@@ -21,7 +21,11 @@
             "request": "launch",
             "preLaunchTask": "build-gpsr",
             "program": "${workspaceFolder}/GPSRCmdGen/bin/Debug/net5.0/GPSRCmdGen.dll",
-            "args": [],
+            "args": [
+                "--seed", "20",
+                "Resources/CommonRules.txt",
+                "Resources/GPSRGrammar.txt"
+            ],
             "cwd": "${workspaceFolder}/GPSRCmdGen",
             "stopAtEntry": false,
             "console": "integratedTerminal",

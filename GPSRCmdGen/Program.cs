@@ -31,7 +31,14 @@ namespace RoboCup.AtHome.GPSRCmdGen
 			Parser.Default.ParseArguments<Options>(args)
             .WithParsed(options =>
             {
-                var program = new BaseProgram(new GPSRGenerator(options.Seed), options)
+                foreach (string path in options.Files)
+                {
+                    if (!File.Exists(path))
+                    {
+                        Generator.Err($"{path} does not exist!");
+                    }
+                }
+                var program = new BaseProgram(options)
 				{
 					Name = "GPSRCmdGen",
 					LongName = "GPSR Command Generator 2021 modified by NUbots"

@@ -13,7 +13,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
         public override string ToString()
         {
-            return $"ProductionRuleAttributes {{ Name = \"{Name}\" }}";
+            return $"{{ Name = \"{Name}\" }}";
         }
     }
 }

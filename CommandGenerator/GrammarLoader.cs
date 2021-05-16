@@ -6,11 +6,11 @@ using System.Text.RegularExpressions;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
-	public partial class Grammar{
+	public partial class Grammar {
 		/// <summary>
 		/// Code for loading grammar files in a (thread) safe way
 		/// </summary>
-		internal class GrammarLoader
+		public class GrammarLoader
 		{
 			#region Variables
 
@@ -29,25 +29,19 @@ namespace RoboCup.AtHome.CommandGenerator
 			/// </summary>
 			private List<string> lines;
 
-			#endregion
+            #endregion
 
-			#region Constructor
-			#endregion
+            #region Methods
 
-			#region Methods
-
-			/// <summary>
-			/// Loads a grammar from a text file.
-			/// </summary>
-			/// <param name="filePath">The grammar file path.</param>
-			/// <param name="requireMainNT">Specifies whether a Main rule is required to load the grammar.</param>
-			/// <returns>The grammar represented within the provided file, or null
-			/// if the grammar could not be loadder.</returns>
-			public Grammar FromFile (string filePath, bool requireMainNT = true)
+            /// <summary>
+            /// Loads a grammar from a text file.
+            /// </summary>
+            /// <param name="filePath">The grammar file path.</param>
+            /// <param name="requireMainNT">Specifies whether a Main rule is required to load the grammar.</param>
+            /// <returns>The grammar represented within the provided file, or null
+            /// if the grammar could not be loadder.</returns>
+            public Grammar Load(string filePath, bool requireMainNT = true)
 			{
-				if (!File.Exists (filePath))
-					return null;
-
 				grammarFilepath = filePath;
 				grammar = new Grammar ();
 				lines = new List<string>(File.ReadAllLines (filePath));
@@ -72,7 +66,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				else if((directive != "load") || !File.Exists(path))
 					return;
 
-				Grammar subGrammar = new GrammarLoader().FromFile(path, false);
+				Grammar subGrammar = new GrammarLoader().Load(path, false);
 				if(subGrammar == null)
 					return;
 				foreach(var rule in subGrammar.ProductionRules){
@@ -98,7 +92,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				if(!File.Exists(path))
 					return;
 
-				Grammar subGrammar = new GrammarLoader().FromFile(path, false);
+				Grammar subGrammar = new GrammarLoader().Load(path, false);
 				if(subGrammar == null)
 					return;
                 foreach (var rule in subGrammar.ProductionRules)
@@ -133,7 +127,7 @@ namespace RoboCup.AtHome.CommandGenerator
                     return;
                 }
 
-                Grammar subGrammar = new GrammarLoader().FromFile(path, true);
+                Grammar subGrammar = new GrammarLoader().Load(path, true);
 				if(subGrammar == null){
 					errMsg = String.Format(errMsg, $"Cannot load grammar file {path}");
 					pr = new ProductionRule(nonTerminal, new String[]{errMsg});

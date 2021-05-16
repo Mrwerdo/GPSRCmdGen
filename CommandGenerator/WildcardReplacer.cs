@@ -129,7 +129,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
 			if(w.Replacement != null) return;
 			if ((w.Name == "location") && String.IsNullOrEmpty(w.Where))
-				w.Keyword = w.Type ?? generator.RandomPick ("beacon", "room", "placement");
+				w.Keyword = w.Type ?? generator.Rnd.RandomPick("beacon", "room", "placement");
 			switch (w.Keyword)
 			{
 				case "beacon":
@@ -162,7 +162,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
 			if(w.Replacement != null) return;
 			if ((w.Name == "name") && String.IsNullOrEmpty(w.Where))
-				w.Keyword = w.Type ?? generator.RandomPick ("male", "female");
+				w.Keyword = w.Type ?? generator.Rnd.RandomPick ("male", "female");
 
 
 
@@ -184,7 +184,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			if(w.Replacement != null) return;
 
 			if ((w.Name == "object") && String.IsNullOrEmpty(w.Where))
-				w.Keyword = (w.Type == null) ? generator.RandomPick ("kobject", "aobject") : String.Format("{0}object", w.Type[0]);
+				w.Keyword = (w.Type == null) ? generator.Rnd.RandomPick ("kobject", "aobject") : String.Format("{0}object", w.Type[0]);
 
             w.Replacement = w.Keyword switch
             {

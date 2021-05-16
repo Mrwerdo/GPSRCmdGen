@@ -10,7 +10,7 @@ namespace RoboCup.AtHome.CommandGenerator.Containers
 	/// Helper class. Implements a container for (de)serlaizing names  
 	/// </summary>
 	[XmlRoot(ElementName = "names", Namespace = "")]
-	public class NameContainer
+	public class NameContainer : ILoadingContainer<PersonName>
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RoboCup.AtHome.CommandGenerator.NameContainer"/> class.
@@ -28,5 +28,12 @@ namespace RoboCup.AtHome.CommandGenerator.Containers
 		/// </summary>
 		[XmlElement("name")]
 		public List<PersonName> Names { get; set; }
+
+		public List<PersonName> Results
+		{
+			get {
+				return Names;
+			}
+		}
 	}
 }

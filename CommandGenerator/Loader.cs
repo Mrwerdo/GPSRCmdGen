@@ -35,9 +35,9 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// Initializes the <see cref="RoboCup.AtHome.CommandGenerator.Loader"/> class.
 		/// </summary>
 		static Loader(){
-			Loader.exePath = AppDomain.CurrentDomain.BaseDirectory;
-			Loader.ns = new XmlSerializerNamespaces();
-			Loader.ns.Add ("", "");
+			exePath = AppDomain.CurrentDomain.BaseDirectory;
+			ns = new XmlSerializerNamespaces();
+			ns.Add ("", "");
 		}
 
 		#endregion
@@ -60,7 +60,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="fileName">The name of the file to combine into a path</param>
 		/// <returns>A full path for the given fileName.</returns>
 		public static string GetPath(string fileName){
-			return Path.Combine (Loader.exePath, fileName);
+			return Path.Combine (exePath, fileName);
 		}
 
 		/// <summary>
@@ -71,29 +71,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="fileName">The name of the file to combine into a path</param>
 		/// <returns>A full path for the given fileName.</returns>
 		public static string GetPath(string subdir, string fileName){
-			return Path.Combine (Path.Combine(Loader.exePath, subdir), fileName);
-		}
-
-		/// <summary>
-		/// Loads an array of T objects from a XML file.
-		/// </summary>
-		/// <param name="filePath">The path of the XML file</param>
-		/// <typeparam name="T">The type of objects contained in the file.</typeparam>
-		/// <returns>The array of T objects in the XML file</returns>
-		public static List<T> LoadArray<T>(string filePath)
-		{
-			T[] array = null;
-			List<T> list = new();
-			using (StreamReader reader = new(filePath, ASCIIEncoding.UTF8))
-			{
-				XmlSerializer serializer = new(typeof(T[]));
-				serializer.UnknownAttribute+= new XmlAttributeEventHandler(Serializer_UnknownAttribute);
-				array = (T[])serializer.Deserialize(reader);
-				reader.Close();
-			}
-			if(array != null)
-				list = new List<T>(array);
-			return list;
+			return Path.Combine (Path.Combine(exePath, subdir), fileName);
 		}
 
 		/// <summary>
@@ -102,7 +80,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="filePath">The path of the XML file</param>
 		/// <typeparam name="T">The type of object to load.</typeparam>
 		/// <returns>The object in the XML file</returns>
-		public static T Load<T>(string filePath)
+		private static T LoadObject<T>(string filePath)
 		{
 			T item;
 			using (StreamReader reader = new(filePath, ASCIIEncoding.UTF8))
@@ -122,7 +100,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="xml">An XML encoded string</param>
 		/// <typeparam name="T">The type of object to load.</typeparam>
 		/// <returns>The object in the XML string</returns>
-		public static T LoadXmlString<T>(string xml)
+		private static T LoadXmlString<T>(string xml)
 		{
 			T item;
 			using (MemoryStream ms = new(Encoding.UTF8.GetBytes(xml ?? String.Empty)))
@@ -162,74 +140,17 @@ namespace RoboCup.AtHome.CommandGenerator
             stream.Close();
         }
 
-		/// <summary>
-		/// Loads a list of Grammar objects from the grammars subdirectory.
-		/// </summary>
-		/// <returns>A list of Grammar objects</returns>
-		public static List<Grammar> LoadGrammars()
+        public static List<V> Load<P, V>(string name, string path, string backup) where P : ILoadingContainer<V>
 		{
-			return LoadGrammars("grammars");
-		}
-
-		private static string[] FindGrammars(string grammarsDirectoryName) {
-			// Look in current working directory first, then restore to executable directory, then
-			// we are done.
-			string grammarsPath = Path.Combine(Directory.GetCurrentDirectory(),  "Resources");
-			if (Directory.Exists(grammarsPath)) {
-				return Directory.GetFiles(grammarsPath, "*.txt", SearchOption.TopDirectoryOnly);
-			} else {
-				grammarsPath = GetPath(grammarsDirectoryName);
-				return Directory.GetFiles (grammarsPath, "*.txt", SearchOption.TopDirectoryOnly);
+			try {
+				P obj = LoadObject<P>(GetPath(path));
+                Generator.Green("Done!");
+				return obj.Results;
+			} catch {
+                P obj = LoadXmlString<P>(backup);
+                Generator.Err($"Failed! Default {name} loaded");
+				return obj.Results;
 			}
-		}
-
-		/// <summary>
-		/// Loads a list of Grammar objects from the grammars subdirectory.
-		/// </summary>
-		/// <returns>A list of Grammar objects</returns>
-		public static List<Grammar> LoadGrammars (string grammarsDirectoryName)
-		{
-			Grammar grammar;
-            string[] gfs = FindGrammars(grammarsDirectoryName);
-			List<Grammar> grammars = new(gfs.Length);
-			foreach (string gf in gfs) {
-				grammar = Grammar.LoadFromFile (gf);
-				if (grammar != null)
-					grammars.Add (grammar);
-			}
-			if (grammars.Count < 1)
-				throw new Exception ("No grammars could be loaded");
-			return grammars;
-		}
-
-		/// <summary>
-		/// Loads the set of Locations grouped by room from the Locations.xml file.
-		/// </summary>
-		/// <returns>A LocationManager that contains the set of objects and categories</returns>
-		public static LocationManager LoadLocations(string filePath)
-		{
-			RoomContainer container = Load<RoomContainer>(filePath);
-			if (container == null)
-				throw new Exception("No objects found");
-			LocationManager manager = LocationManager.Instance;
-			foreach (Room r in container.Rooms)
-				manager.Add(r);
-			return manager;
-		}
-
-		/// <summary>
-		/// Loads the set of GPSRObjects and Categories from the Objects.xml file.
-		/// </summary>
-		/// <returns>A GPSRObjectManager that contains the set of objects and categories</returns>
-		public static ObjectManager LoadObjects (string filePath)
-		{
-			CategoryContainer container = Load<CategoryContainer> (filePath);
-			if (container == null)
-				throw new Exception ("No objects found");
-			ObjectManager manager = ObjectManager.Instance;
-			foreach (Category c in container.Categories)
-				manager.Add (c);
-			return manager;
 		}
 
 		/// <summary>

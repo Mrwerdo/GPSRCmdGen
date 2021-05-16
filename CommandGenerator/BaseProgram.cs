@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using RoboCup.AtHome.CommandGenerator.Containers;
+using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -14,38 +16,19 @@ namespace RoboCup.AtHome.CommandGenerator
 		public string Name = "cmdgen";
 		public string LongName = "Command Generator";
 
-		public BaseProgram(Generator g, Options options)
+		public BaseProgram(Options options)
 		{
 			Options = options;
-			generator = g;
+			generator = new Generator(options.Seed);
 		}
-
-		/// <summary>
-		/// Loads data from lists and storage
-		/// </summary>
-		protected void LoadData()
-		{
-			Console.Write("Loading objects...");
-			generator.LoadObjects();
-			Console.Write("Loading names...");
-			generator.LoadNames();
-			Console.Write("Loading locations...");
-			generator.LoadLocations();
-			Console.Write("Loading gestures...");
-			generator.LoadGestures();
-			Console.Write("Loading predefined questions...");
-			generator.LoadQuestions();
-			Console.Write("Loading grammars...");
-			generator.LoadGrammars();
-			generator.ValidateLocations();
-		}
-
 
 		/// <summary>
 		/// Starts the user input loop
 		/// </summary>
 		public void Run()
 		{
+            Info($"Selected {generator.Grammar.Name} {generator.Grammar.Tier} difficulty degree grammar.");
+
 			while (true) {
 				Console.Write($"{Name} (press q to quit): ");
 				ConsoleKeyInfo key = Console.ReadKey();
@@ -57,10 +40,10 @@ namespace RoboCup.AtHome.CommandGenerator
 						break;
 					case 'q':
 						return;
-					default:
+                    default:
 						var task = GetTask();
 						if (task != null) task.Print();
-						break;
+                        break;
 				}
 			}
         }
@@ -72,10 +55,72 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 		}
 
-		private Task GetTask()
+		private void LoadData() 
 		{
-			return generator.GenerateTask(DifficultyDegree.High);
+			Console.Write("Loading objects...");
+            var container = Loader.Load<CategoryContainer, Category>("Objects", "Objects.xml", Resources.Objects);
+			if (container == null) throw new Exception ("No objects found");
+			foreach (var c in container) {
+				generator.AllObjects.Add(c);
+            }
+
+			Console.Write("Loading names...");
+            generator.AllNames = Loader.Load<NameContainer, PersonName>("Names", "Names.xml", Resources.Names);
+
+			Console.Write("Loading locations...");
+            var locations = Loader.Load<RoomContainer, Room>("Locations", "Locations.xml", Resources.Locations);
+			if (locations == null) throw new Exception("No locations found");
+			foreach (var l in locations) {
+				generator.AllLocations.Add(l);
+			}
+
+			Console.Write("Loading gestures...");
+            generator.AllGestures = Loader.Load<GestureContainer, Gesture>("Gestures", "Gestures.xml", Resources.Gestures);
+
+			Console.Write("Loading predefined questions...");
+            generator.AllQuestions = Loader.Load<QuestionsContainer, PredefinedQuestion>("Questions", "Questions.xml", Resources.Questions);
+
+			Console.Write("Loading grammars...");
+            generator.Grammar = LoadGrammars();
+			Generator.Green("Done");
+			generator.ValidateLocations();
 		}
+
+
+		private Task GetTask() {
+			try
+			{
+                return generator.GenerateTask();
+			}
+			catch (StackOverflowException)
+			{
+				Generator.Err("Could not generate grammar. Grammar is recursive");
+			}
+			catch (Exception e)
+			{
+				Generator.Err("Could not generate grammar. Unexpected error");
+				Console.WriteLine(e.Message);
+			}
+			return null;
+		}
+
+        private Grammar LoadGrammars()
+        {
+            var grammar = new Grammar();
+            var loader = new Grammar.GrammarLoader();
+            foreach (var file in Options.Files)
+            {
+                var g = loader.Load(file, false);
+                foreach (var rule in g.ProductionRules)
+                {
+                    grammar.AddRule(rule);
+                }
+				if (g.Tier.CompareTo(grammar.Tier) > 0) {
+					grammar.Tier = g.Tier;
+				}
+            }
+            return grammar;
+        }
 
 		/// <summary>
 		/// Initializes the random task Generator and loads data from lists and storage
@@ -106,7 +151,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			using var writer = GetOutputStream();
             for (int i = 1; i <= Options.Bulk; ++i)
             {
-                Task task = GetTask();
+                Task task = generator.GenerateTask();
                 if (task == null) continue;
                 string sTask = task.ToString().Trim();
                 if (sTask.Length < 1) continue;

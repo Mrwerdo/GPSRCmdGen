@@ -10,7 +10,7 @@ namespace RoboCup.AtHome.CommandGenerator.Containers
 	/// Helper class. Implements a container for (de)serlaizing categories
 	/// </summary>
 	[XmlRoot(ElementName = "categories", Namespace = "")]
-	public class CategoryContainer
+    public class CategoryContainer : ILoadingContainer<Category>
 	{
 
 		/// <summary>
@@ -29,5 +29,11 @@ namespace RoboCup.AtHome.CommandGenerator.Containers
 		/// </summary>
 		[XmlElement("category")]
 		public List<Category> Categories { get; set; }
+
+		public List<Category> Results {
+			get {
+				return Categories;
+			}
+		}
 	}
 }

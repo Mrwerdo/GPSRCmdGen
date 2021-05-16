@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CommandLine;
 
 namespace RoboCup.AtHome.CommandGenerator
@@ -15,6 +16,9 @@ namespace RoboCup.AtHome.CommandGenerator
         
         [Option('s', "seed", Default = 0)]
         public int SeedOption { get; set; }
+
+        [Value(0)]
+        public IEnumerable<string> Files { get; set; }
 
         public int Seed {
             get {

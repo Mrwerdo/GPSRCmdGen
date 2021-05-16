@@ -147,9 +147,15 @@ namespace RoboCup.AtHome.CommandGenerator
 			}  
 		}
 
-		public static T SelectUniform<T>(this ICollection<T> collection, Random random) {
-			return collection.ElementAt(random.Next(collection.Count));
-		}
+        public static T SelectUniform<T>(this ICollection<T> collection, Random random)
+        {
+            return collection.ElementAt(random.Next(collection.Count));
+        }
+
+        public static T RandomPick<T>(this Random random, params T[] source)
+        {
+            return source.SelectUniform(random);
+        }
 
 		/// <summary>
 		/// Context free grammar and where clause aware split. This function splits by non-terminal identifiers
@@ -187,6 +193,17 @@ namespace RoboCup.AtHome.CommandGenerator
 				return s.ToUpper();
 			}
 		}
+
+        public static string Indent(this string value, int size)
+        {
+			if (size == 0) return value;
+			var indent = new string(' ', size);
+			var output = "";
+			foreach (var s in value.Split('\n')) {
+				output += indent + s;
+			}
+            return output;
+        }
 	}
 }
 

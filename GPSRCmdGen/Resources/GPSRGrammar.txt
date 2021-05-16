@@ -1,6 +1,6 @@
 ﻿; grammar name GPSR Grammar
 ; grammar tier High
-; import common.txt
+; import CommonRules.txt
 
 $Main     = $pmain | $main
 $pmain    = $polite $main
@@ -153,6 +153,6 @@ $door        = ( front | back | main | rear ) (entrance | door)
 #
 ##############################################################################
 $vbtakeout   = (take out) | dump
-$vbcleanup   = (clean out) | (clean up) | (tidy op) | neaten | order
+$vbclean     = (clean out) | (clean up) | (tidy up) | neaten | order
 $vbserve     = serve | arrange | deliver | distribute | give | provide
 $vbmeet      = contact | face | find | greet

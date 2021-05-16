@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using CommandLine;
 using RoboCup.AtHome.CommandGenerator;
@@ -31,10 +32,17 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 			Parser.Default.ParseArguments<Options>(args)
             .WithParsed(options =>
             {
-                var program = new BaseProgram(new EGPSRGenerator(options.Seed), options)
+                foreach (string path in options.Files)
+                {
+                    if (!File.Exists(path))
+                    {
+                        Generator.Err($"{path} does not exist!");
+                    }
+                }
+                var program = new BaseProgram(options)
 				{
-					Name = "EGPSRCmdGen",
-					LongName = "Enhanced GPSR Command Generator 2021 modified by NUbots"
+					Name = "GPSRCmdGen",
+					LongName = "GPSR Command Generator 2021 modified by NUbots"
 				};
 				program.Setup();
 				if (options.Bulk > 0) {

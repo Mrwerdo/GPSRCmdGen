@@ -10,7 +10,7 @@ namespace RoboCup.AtHome.CommandGenerator.Containers
 	/// Helper class. Implements a container for (de)serlaizing locations
 	/// </summary>
 	[XmlRoot(ElementName = "rooms", Namespace = "")]
-	public class RoomContainer
+	public class RoomContainer : ILoadingContainer<Room>
 	{
 
 		/// <summary>
@@ -29,5 +29,12 @@ namespace RoboCup.AtHome.CommandGenerator.Containers
 		/// </summary>
 		[XmlElement("room")]
 		public List<Room> Rooms { get; set; }
+
+		public List<Room> Results
+		{
+			get {
+				return Rooms;
+			}
+		}
 	}
 }
