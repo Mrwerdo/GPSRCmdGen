@@ -11,6 +11,9 @@
     <EmbeddedResource Include="../CommonFiles/Names.xml" />
     <EmbeddedResource Include="../CommonFiles/Objects.xml" />
     <EmbeddedResource Include="../CommonFiles/Questions.xml" />
+    <EmbeddedResource Include="../CommonFiles/EGPSRGrammar.txt" />
+    <EmbeddedResource Include="../CommonFiles/GPSRGrammar.txt" />
+    <EmbeddedResource Include="../CommonFiles/CommonRules.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />

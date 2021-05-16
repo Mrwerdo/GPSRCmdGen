@@ -56,6 +56,21 @@ namespace RoboCup.AtHome.CommandGenerator {
                 return Read("Questions.xml");
             }
         }
+        public static string EGPSRGrammar {
+            get {
+                return Read("EGPSRGrammar.txt");
+            }
+        }
 
+        public static string GPSRGrammar {
+            get {
+                return Read("GPSRGrammar.txt");
+            }
+        }
+        public static string CommonRules {
+            get {
+                return Read("CommonRules.txt");
+            }
+        }
     }
 }

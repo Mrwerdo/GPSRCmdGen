@@ -45,6 +45,8 @@ $deliver  = $vbbring me the {aobject} from the {placement}
 $deliver  = $takefrom and ($delivme | $delivat)
 $deliver  = $takefrom and $place
 $deliver  = $vbbtake my $luggage to the $taxi
+$deliver  = $take and $vbplace it on the {placement 2}
+$deliver  = $takefrom and $vbplace it on the {placement 2}
 
 
 ##############################################################################
@@ -156,3 +158,4 @@ $vbtakeout   = (take out) | dump
 $vbclean     = (clean out) | (clean up) | (tidy up) | neaten | order
 $vbserve     = serve | arrange | deliver | distribute | give | provide
 $vbmeet      = contact | face | find | greet
+$vbfollow    = follow

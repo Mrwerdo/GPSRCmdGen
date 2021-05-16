@@ -2,20 +2,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "EGPSRCmdGen",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build-egpsr",
-            "program": "${workspaceFolder}/EGPSRCmdGen/bin/Debug/net5.0/EGPSRCmdGen.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/EGPSRCmdGen",
-            "stopAtEntry": false,
-            "console": "integratedTerminal",
-            "logging": {
-                "moduleLoad": false
-            }
-        },
-        {
             "name": "GPSRCmdGen",
             "type": "coreclr",
             "request": "launch",
@@ -23,8 +9,8 @@
             "program": "${workspaceFolder}/GPSRCmdGen/bin/Debug/net5.0/GPSRCmdGen.dll",
             "args": [
                 "--seed", "20",
-                "Resources/CommonRules.txt",
-                "Resources/GPSRGrammar.txt"
+                "../CommonFiles/CommonRules.txt",
+                "../CommonFiles/GPSRGrammar.txt"
             ],
             "cwd": "${workspaceFolder}/GPSRCmdGen",
             "stopAtEntry": false,

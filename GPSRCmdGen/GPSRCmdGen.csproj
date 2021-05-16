@@ -13,9 +13,4 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Resources/GPSRGrammar.txt" />
-    <EmbeddedResource Include="Resources/CommonRules.txt" />
-  </ItemGroup>
 </Project>

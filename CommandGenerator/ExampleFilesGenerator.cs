@@ -7,7 +7,7 @@ using RoboCup.AtHome.CommandGenerator;
 using RoboCup.AtHome.CommandGenerator.Containers;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 
-namespace RoboCup.AtHome.EGPSRCmdGen
+namespace RoboCup.AtHome.CommandGenerator
 {
 	/// <summary>
 	/// Example files generator.
@@ -67,7 +67,7 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 		static void SaveGrammarFile (string name, string header, string formatSpec, string content)
 		{
 			string fileName = String.Format ("{0}.txt", name);
-			fileName = Loader.GetPath(EGPSRGenerator.GRAMMARS_PATH, fileName);
+			fileName = Loader.GetPath("gpsr_grammars", fileName);
 			if (!Overwrite (fileName))
 				return;
             string Name = name[0..1].ToUpper() + name[1..];
@@ -84,7 +84,7 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 		/// </summary>
 		private static void SaveGrammars()
 		{
-			string path = Loader.GetPath(EGPSRGenerator.GRAMMARS_PATH);
+			string path = Loader.GetPath("gpsr_grammars");
 			if(!Directory.Exists(path))
 				Directory.CreateDirectory(path);
 
@@ -92,8 +92,8 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 			string authoring = Resources.GrammarHeader;
 
 			Dictionary<string, string> grammars = new();
-			grammars.Add("egpsr", EGPSRCmdGenResources.EGPSRGrammar);
-			grammars.Add("common", EGPSRCmdGenResources.CommonRules);
+            grammars.Add("category1", Resources.GPSRGrammar);
+            grammars.Add("common", Resources.CommonRules);
 
 			foreach (KeyValuePair<string, string> g in grammars) {
 				try{
