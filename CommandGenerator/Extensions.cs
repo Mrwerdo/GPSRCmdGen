@@ -174,6 +174,14 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 			return parts.ToArray();
 		}
+
+		public static string Capitalize(this string s) {
+			if (s.Length > 1) {
+				return s[0..1].ToUpper() + s[1..];
+			} else {
+				return s.ToUpper();
+			}
+		}
 	}
 }
 

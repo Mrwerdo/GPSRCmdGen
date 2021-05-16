@@ -63,78 +63,85 @@ namespace RoboCup.AtHome.CommandGenerator
 			return s;
 		}
 
-		
-		/*
-			 * 
-Go to the bedroom, find a person and tell the time.
-Navigate to the kitchen, find a person and follow her.
-Attend to the dinner-table, grasp the crackers, and take them to the side-table.
-Go to the shelf, count the drinks and report to me.
-Take this object and bring it to Susan at the hall.
-Bring a coke to the person in the living room and answer him a question.
-Offer a drink to the person at the door (robot needs to solve which drink will be delivered).
+		/// <summary>
+		/// Prints a task including metadata into the output stream.
+		/// </summary>
+		/// <param name="task">The task to be print</param>
+		public void Print()
+		{
+			string sTask = ToString().Trim();
+			if (sTask.Length < 1)
+				return;
 
-			*/
+			// switch Console color to white, backuping the previous one
+			ConsoleColor pc = Console.ForegroundColor;
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.WriteLine();
+			// Prints a === line
+			string pad = String.Empty.PadRight(Console.BufferWidth - 1, '=');
+			Console.WriteLine(pad);
+			Console.WriteLine();
 
-			/// 	answering,
-			/// 	counting,
-			/// 	finding,
-			/// 	following,
-			/// 	grasping,
-			/// 	handling,
-			/// 	navigating,
-			/// 	opening,
-			/// 	pouring,
-			/// 	retrieving,
-			/// 	saying
-			/*
-			 *********************************************************
-			 * Count
-			 *********************************************************
-			 * Count the (ObjectCategory|AlikeObjects) at the (PlacementLocation)...
-			 * Count the (People|PeopleByGender|PeopleByGesture) at the (Room)...
-			 * ...and report to (me|Name (at|in|which is in|) the (Room).
-			 * 
-			 * (go|navigate) to the (PlacementLocation), count the (ObjectCategory|AlikeObjects)...
-			 * (go|navigate) to the (Room) count the (People|PeopleByGender|PeopleByGesture)...
-			 * ...and report to (me|Name (at|in|which is in) the (Room)).
-			 * 
-			 * Tell (me|to Name (at|in|which is in) the (Room))...
-			 * ...how many (ObjectCategory|AlikeObjects) are in the (PlacementLocation).
-			 * ...how many (People|PeopleByGender|PeopleByGesture) are in the (Room).
-			 * 
-			 * Grammar:
-			 * $count  = $count1 | $count2 | $count3
-			 * 
-			 * $count1 = count the $cntxat $report
-			 * $cntxat = $cntoat | $cntpat
-			 * $cntoat = $object at the $PlacementLocation
-			 * $cntpat = $people at the $Room
-			 * 
-			 * $count2 = $navigt $docntx $report 
-			 * $navigt = $GoVerb to the 
-			 * $docntx = $docnto | $docntp
-			 * $docnto = $PlacementLocation, count the $object
-			 * $docntp = $Room, count the $people
-			 * 
-			 * $count3 = Tell $target how many $ctable
-			 * $ctable = $objain | $pplain
-			 * $objain = $object are in the $PlacementLocation
-			 * $pplain = $people are in the $Room
-			 * 
-			 * $object = objects | $ObjectCategory | $AlikeObjects
-			 * $people = people | $PeopleByGender | $PeopleByGesture
-			 * $report = and report to $target
-			 * $target = me | ($Name (at | in | which is in) the $Room)
-			 * 
-			 * 
-			 * 
-			 *********************************************************
-			 * 
-			 *********************************************************
-			 */
+			// Prints task string and metadata
+			sTask = sTask[0..1].ToUpper() + sTask[1..];
+			do
+			{
+				int cut = sTask.Length;
+				if (cut >= Console.BufferWidth)
+					cut = sTask.LastIndexOf(' ', Console.BufferWidth-1);
+				Console.WriteLine(sTask.Substring(0, cut));
+				sTask = sTask[cut..].Trim();
+			} while (!String.IsNullOrEmpty(sTask));
+            PrintTaskMetadata();
+			Console.WriteLine();
+			// Prints another line
+			Console.WriteLine(pad);
+			// Restores Console color
+			Console.ForegroundColor = pc;
+			Console.WriteLine();
+		}
+
+		/// <summary>
+		/// Prints the task metadata.
+		/// </summary>
+		/// <param name="task">The task object containing metadata to print.</param>
+		private void PrintTaskMetadata()
+		{
+			Console.WriteLine();
+			List<string> remarks = new();
+            foreach (Token token in Tokens) {
+                PrintMetadata(token, remarks);
+			}
+			if (remarks.Count > 0)
+			{
+				Console.WriteLine("remarks");
+				foreach (string r in remarks)
+					Console.WriteLine("\t{0}", r);
+			}
+			Console.WriteLine("parse tree:");
+			Console.WriteLine(Tree.PrettyTree());
+			Console.WriteLine(Tree.RenderCommand());
+		}
+
+		/// <summary>
+		/// Prints the metadata of the given Token
+		/// </summary>
+		/// <param name="token">The token onject containing the metadata to print</param>
+		/// <param name="remarks">A list to store all metadata whose token has no name</param>
+		private static void PrintMetadata(Token token, List<string> remarks)
+		{
+			if (token.Metadata.Count < 1) return;
+			// Store remarks for later
+			if (String.IsNullOrEmpty(token.Name))
+			{
+				remarks.AddRange(token.Metadata);
+				return;
+			}
+			// Print current token metadata
+			Console.WriteLine("{0}", token.Name);
+			foreach (string md in token.Metadata)
+				Console.WriteLine("\t{0}", md);
+		}
 	}
-
-
 }
 

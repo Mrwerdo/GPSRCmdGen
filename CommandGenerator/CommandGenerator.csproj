@@ -13,6 +13,7 @@
     <EmbeddedResource Include="../CommonFiles/Questions.xml" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="5.0.6" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
     <PackageReference Include="System.Text.Json" Version="5.0.2" />
