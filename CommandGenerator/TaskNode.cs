@@ -36,36 +36,47 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// If null then this is a terminal node.
 		/// </summary>
 		public List<TaskNode> Children { get; private set; }
-		public string StringValue { get; set; }
-		public string Term { get; set; }
-		public ProductionRuleAttributes Attributes { get; set; }
 
-		public TaskNode(TaskNode parent, Nullable<DifficultyDegree> tier = null) {
-			this._tier = tier;
-			Parent = new WeakReference<TaskNode>(parent);
-			Children = new List<TaskNode>();
-			StringValue = null;
+		public string Value { get; set; }
+		public bool IsNonTerminal { get; set; }
+		public ProductionRuleAttributes Attributes { get; set; }
+        public ProductionRule.Replacement Replacement { get; set; }
+		public ProductionRule Rule 
+		{
+			get {
+				return Replacement.Rule;
+			}
 		}
 
+		public TaskNode(string value, bool isNonTerminal) {
+			Value = value;
+			IsNonTerminal = isNonTerminal;
+			Parent = new WeakReference<TaskNode>(null);
+			Children = new List<TaskNode>();
+		}
+
+        public bool IsLiteral
+        {
+            get
+            {
+                return !IsNonTerminal;
+            }
+			set 
+			{
+				IsNonTerminal = !value;
+			}
+        }
+
 		public override string ToString() {
-			string output = "";
-			if (StringValue != null) {
-				output += StringValue;
-			} else if (Term != null) {
-				output += Term;
-			}
-			foreach (TaskNode child in Children) {
-				output += "(" + child.ToString() + ")";
-			}
-			return output;
+			return IsNonTerminal ? "$" + Value : Value;
 		}
 		
 		public string Render() {
 			string output = "";
-			if (StringValue != null) {
-				output += StringValue;
-			} else if (Term != null) {
-                output += String.Join(" ", Children.ConvertAll(t => t.Render()));
+			if (IsNonTerminal) {
+                output += string.Join(" ", Children.ConvertAll(t => t.Render()));
+			} else {
+				output += Value;
 			}
 			return output;
 		}
@@ -73,14 +84,14 @@ namespace RoboCup.AtHome.CommandGenerator
 		public string PrettyTree(int indent = 0) {
 			string output = "";
 			string idt = new('.', indent * 2);
-			if (StringValue != null) {
-				output += idt + "-> " + StringValue;
-			} else if (Term != null) {
-				output += idt + "-> " + Term;
+			if (IsNonTerminal) {
+				output += idt + "-> " + Value;
 				if (Children.Count > 0) {
 					output += "\n";
 				}
-				output += String.Join("\n", Children.ConvertAll(t => t.PrettyTree(indent + 1)));
+				output += string.Join("\n", Children.ConvertAll(t => t.PrettyTree(indent + 1)));
+			} else {
+				output += idt + "-> " + Value;
 			}
 			return output;
 		}

@@ -60,89 +60,6 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 
 			/// <summary>
-			/// Expands all production rules in a set of production rules.
-			/// Expansion consists in spliting all parentheses and OR operators in a
-			/// replacement into new production rules
-			/// </summary>
-			/// <param name="ruleDicc">A given rule dictionary having the non-terminal
-			/// symbol as key and the production rule as value.</param>
-			private static void ExpandRules(Grammar grammar)
-			{
-				List<ProductionRule> ruleList = new(grammar.ProductionRules);
-
-				for (int ix = 0; ix < ruleList.Count; ++ix) {
-                    ExpandRule(ix, ruleList, grammar);
-				}
-			}
-
-			/// <summary>
-			/// Expands the addressed production rule in a set of production rules.
-			/// Expansion consists in spliting all parentheses and OR operators in a
-			/// replacement into new production rules
-			/// </summary>
-			/// <param name="ix">The index of the rule to expand in the lsit of rules</param>
-			/// <param name="ruleList">The set of production rules of the grammar with
-			/// elements accessible by index in O(1).</param>
-			/// <param name="ruleDicc">The set of production rules of the grammar with
-			/// elements accessible by non-terminal symbol in O(1).</param>
-			private static void ExpandRule (int ix, List<ProductionRule> ruleList, Grammar grammar)
-			{
-				if (ix >= ruleList.Count)
-					return;
-
-				string replacement;
-				string nonTerminal;
-				int nonTerminalBaseIndex = 0;
-				ProductionRule pr = ruleList [ix];
-				for (int i = 0; i < pr.Replacements.Count; ++i) {
-					replacement = pr.Replacements [i];
-					// Find open parenthesis within replacement
-					for (int cc = 0; cc < replacement.Length; ++cc) {
-						if (replacement [cc] != '(')
-							continue;
-						// Open parenthesis was found!
-						// Increase reading header to the char at the right of the left par
-						int bcc = ++cc; 
-						// and find the closing parenthesis
-						if (!Scanner.FindClosingParenthesis (replacement, ref cc))
-							break;
-						// Get the replacement (subchunk)
-						string subchunk = replacement[bcc..cc];
-						// Generate a Non-Terminal symbol (name) for the replacement
-						nonTerminal = GenerateNonTerminal(pr.NonTerminal, ref nonTerminalBaseIndex, grammar);
-						// Create and add the production rule
-						ProductionRule cpr = ProductionRule.FromString(nonTerminal+" = "+subchunk);
-						ruleList.Add (cpr);
-						grammar.AddRule(cpr);
-						// Replace the subchunk with the Non-Terminal symbol
-						replacement = replacement.Substring (0, bcc-1) + nonTerminal + replacement[(cc + 1)..];
-						pr.Replacements [i] = replacement;
-						cc = bcc + nonTerminal.Length -2;
-					}
-				}
-			}
-
-			/// <summary>
-			/// Generates a new symbol for a non-terminal from a existing one
-			/// </summary>
-			/// <returns>The non terminal.</returns>
-			/// <param name="parentNonTerminal">The symbol of the non-terminal which is
-			/// going to be split and which will be used as base for generating the
-			/// new non-terminal symbol.</param>
-			/// <param name="ix">The index of the current production</param>
-			/// <param name="ruleDicc">The dictionary containing all the rules of the grammar</param>
-			private static string GenerateNonTerminal (string parentNonTerminal, ref int ix, Grammar grammar)
-			{
-				string nonTerminal;
-				string prefix = parentNonTerminal + "_";
-				do {
-					nonTerminal = prefix + ix.ToString ();
-					++ix;
-				} while(grammar.ContainsRule(nonTerminal));
-				return nonTerminal;
-			}
-
-			/// <summary>
 			/// Loads another grammar file within the existing one
 			/// </summary>
 			/// <param name="directive">Specifies the import method used</param>
@@ -299,7 +216,6 @@ namespace RoboCup.AtHome.CommandGenerator
 						continue;
 					grammar.AddRule(pr);
 				}
-                ExpandRules(grammar);
 			}
 
 			/// <summary>

@@ -12,26 +12,26 @@ namespace RoboCup.AtHome.CommandGenerator
 	/// </summary>
 	public class ProductionRule
 	{
-		#region Variables
-
-		/// <summary>
-		/// Stores the non terminal symbol
-		/// </summary>
-		protected string nonTerminal;
-
-		/// <summary>
-		/// Stores the list of productions or replacements for the non terminal symbol
-		/// </summary>
-		protected List<string> replacements;
-
-		public ProductionRuleAttributes attributes;
-
 		/// <summary>
 		/// Regular expression for Rule extraction
 		/// </summary>
 		private static readonly Regex rxRuleParser;
 
-		#endregion
+        #region Properties
+
+        /// <summary>
+        /// Gets the left side of the production rule (Non-Terminal symbol).
+        /// </summary>
+        public string NonTerminal { get; private set; }
+
+        /// <summary>
+        /// Gets the right side of the production rule (List of productions).
+        /// </summary>
+        public List<string> Replacements { get; private set; }
+
+
+        public ProductionRuleAttributes Attributes { get; set; }
+        #endregion
 
 		#region Constructors
 
@@ -48,9 +48,9 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// Initializes a new instance of the <see cref="RoboCup.AtHome.CommandGenerator.ProductionRule"/> class.
 		/// </summary>
 		/// <param name="nonTerminal">The non-terminal symbol of the production rule.</param>
-		protected ProductionRule (string nonTerminal){
-			this.nonTerminal = nonTerminal;
-			this.replacements = new List<string> ();
+		public ProductionRule (string nonTerminal){
+			NonTerminal = nonTerminal;
+			Replacements = new List<string> ();
 		}
 
 		/// <summary>
@@ -61,45 +61,29 @@ namespace RoboCup.AtHome.CommandGenerator
 		public ProductionRule (string nonTerminal, IEnumerable<string> replacements) : this(nonTerminal)
 		{
 			if (replacements != null)
-				this.replacements.AddRange (replacements);
+                Replacements.AddRange(replacements);
 		}
-
-		#endregion
-
-		#region Properties
-
-		/// <summary>
-		/// Gets the left side of the production rule (Non-Terminal symbol).
-		/// </summary>
-		public string NonTerminal{ get { return this.nonTerminal; } }
-
-		/// <summary>
-		/// Gets the right side of the production rule (List of productions).
-		/// </summary>
-		public List<string> Replacements{ get { return this.replacements; } }
 
 		#endregion
 
 		#region Methods
 
-		/// <summary>
-		/// Adds all the replacements in a homonime production rule to this instance
-		/// </summary>
-		/// <param name="pr">The production rule whose replacements will be added</param>
-		public void AddReplacements (ProductionRule pr)
-		{
-			// var productions = new List<string>();
-			// foreach (string r in pr.Replacements) {
-			// 	ProductionRule.SplitProductions(r, productions);
-			// }
-			// pr.replacements = productions;
-			if (pr.NonTerminal != this.NonTerminal)
-				return;
-			foreach (string replacement in pr.replacements) {
-				if (this.replacements.Contains (replacement))
-					continue;
-				this.replacements.Add (replacement);
-			}
+		public class Replacement {
+			public ProductionRule Rule { get; set; }
+			public string NonTerminal { get; set; }
+            public string Value { get; set; }
+            public int Index { get; set; }
+        }
+
+		public Replacement PickReplacement(Random random) {
+			int index = random.Next(Replacements.Count);
+			return new Replacement() 
+			{
+				Rule = this,
+				NonTerminal = NonTerminal,
+				Value = Replacements[index],
+				Index = index
+			};
 		}
 
 		/// <summary>
@@ -108,21 +92,21 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <returns>A <see cref="System.String"/> that represents the current <see cref="RoboCup.AtHome.CommandGenerator.ProductionRule"/>.</returns>
 		public override string ToString ()
 		{
-			if (this.replacements.Count == 0)
-				return string.Format ("{0} has no rules", this.nonTerminal);
-			else if (this.replacements.Count == 1)
-				return string.Format ("{0} -> {1}]", this.nonTerminal, this.replacements[0]);
+			if (Replacements.Count == 0)
+				return string.Format ("{0} has no rules", NonTerminal);
+			else if (Replacements.Count == 1)
+				return string.Format ("{0} -> {1}]", NonTerminal, Replacements[0]);
 			int i = 0;
 			StringBuilder sb = new();
-			sb.Append (this.nonTerminal);
+			sb.Append (NonTerminal);
 			sb.Append (" -> ");
-			while(i < this.replacements.Count-1) {
+			while(i < Replacements.Count-1) {
 				sb.Append ('(');
-				sb.AppendLine (this.replacements[i++]);
+				sb.AppendLine (Replacements[i++]);
 				sb.Append (") | ");
 			}
 			sb.Append ('(');
-			sb.AppendLine (this.replacements[i]);
+			sb.AppendLine (Replacements[i]);
 			sb.Append (')');
 			return sb.ToString ();
 		}
@@ -146,16 +130,16 @@ namespace RoboCup.AtHome.CommandGenerator
 			ProductionRule pr = new(name);
 			if (attr != null && !attr.Equals("")) {
                 var options = new JsonSerializerOptions() { IgnoreNullValues = true };
-                pr.attributes = JsonSerializer.Deserialize<ProductionRuleAttributes>(attr, options);
-				Console.WriteLine("attributes: " + pr.attributes.ToString());
+                pr.Attributes = JsonSerializer.Deserialize<ProductionRuleAttributes>(attr, options);
+				Console.WriteLine("attributes: " + pr.Attributes.ToString());
 			}
 			var replacements = ExpandBranchExpression(prod);
 			if (replacements == null) {
 				Console.WriteLine($"Invalid expression: {prod}");
-				pr.replacements = new ();
-				pr.replacements.Add(prod);
+				pr.Replacements = new ();
+				pr.Replacements.Add(prod);
 			} else {
-                pr.replacements = new List<string>(replacements);
+                pr.Replacements = new List<string>(replacements);
 			}
 			return pr;
 		}

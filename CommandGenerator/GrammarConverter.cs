@@ -172,7 +172,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		private void SRGSWriteMainRule()
 		{
-			ProductionRule main = grammar.GetRule("$Main");
+			ProductionRule main = grammar.GetRuleWithoutAttributes("$Main");
 			writer.WriteStartElement("rule");
 			writer.WriteAttributeString("id", "main");
 			writer.WriteAttributeString("scope", "public");

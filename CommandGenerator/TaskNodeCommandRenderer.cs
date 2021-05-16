@@ -26,13 +26,13 @@ namespace RoboCup.AtHome.CommandGenerator
 
         // If true then the node does not participate in rendering, but it's children do.
         private static bool IsHidden(TaskNode node) {
-            return "$Main".Equals(node.Term);
+            return "$Main".Equals(node.Value) && node.IsNonTerminal;
         }
 
         private static string Name(TaskNode node) {
-            if ("open the".Equals(node.StringValue)) {
+            if ("open the".Equals(node.Value) && node.IsLiteral) {
                 return "Open";
-            } else if ("close the".Equals(node.StringValue)) {
+            } else if ("close the".Equals(node.Value) && node.IsLiteral) {
                 return "Close";
             } else {
                 return "Unknown";

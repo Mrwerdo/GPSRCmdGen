@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -144,6 +145,10 @@ namespace RoboCup.AtHome.CommandGenerator
 				list[k] = list[n];  
 				list[n] = value;  
 			}  
+		}
+
+		public static T SelectUniform<T>(this ICollection<T> collection, Random random) {
+			return collection.ElementAt(random.Next(collection.Count));
 		}
 
 		/// <summary>

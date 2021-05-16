@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace RoboCup.AtHome.CommandGenerator
@@ -16,37 +16,38 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Stores the set of production rules (accessible by rule name)
 		/// </summary>
-		private readonly Dictionary<string, ProductionRule> productionRules;
+		private readonly Dictionary<string, List<ProductionRule>> productionRules;
 
-		#endregion
+        #endregion
 
-		#region Constructors
+        #region Constructors
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="RoboCup.AtHome.CommandGenerator.Grammar"/> class.
-		/// </summary>
-		public Grammar(){
-			this.productionRules = new Dictionary<string, ProductionRule> ();
-			this.Tier = DifficultyDegree.Unknown;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RoboCup.AtHome.CommandGenerator.Grammar"/> class.
+        /// </summary>
+        public Grammar()
+        {
+            productionRules = new();
+			Tier = DifficultyDegree.Unknown;
 		}
 
-		#endregion
+        #endregion
 
-		#region Properties
+        #region Properties
 
-		/// <summary>
-		/// Gets or sets the name of the grammar.
-		/// </summary>
-		public string Name{ get; set; }
+        /// <summary>
+        /// Gets or sets the name of the grammar.
+        /// </summary>
+        public string Name { get; set; }
 
-		/// <summary>
-		/// Gets the difficulty degree (tier) of the grammar
-		/// </summary>
-		public DifficultyDegree Tier{ get; set;	}
+        /// <summary>
+        /// Gets the difficulty degree (tier) of the grammar
+        /// </summary>
+        public DifficultyDegree Tier { get; set; }
 
 		public IEnumerable<ProductionRule> ProductionRules {
 			get {
-				return this.productionRules.Values;
+				return productionRules.Values.SelectMany(t => t);
 			}
 		}
 
@@ -54,20 +55,24 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		#region Methods
 
-		public ProductionRule GetRule(string nonTerminalIdentifier) {
-			return productionRules[nonTerminalIdentifier];
-		}
+		public ProductionRule GetRuleWithoutAttributes(string nonTerminalIdentifier) {
+			var rules = productionRules[nonTerminalIdentifier];
+			var replacements = new List<string>();
+			foreach (var r in rules) {
+				replacements.AddRange(r.Replacements);
+			}
+            return new ProductionRule(nonTerminalIdentifier, replacements);
+        }
 
 		public bool ContainsRule(string nonTerminalIdentifier) {
 			return productionRules.ContainsKey(nonTerminalIdentifier);
 		}
 
 		public void AddRule(ProductionRule rule) {
-			if (ContainsRule(rule.NonTerminal)) {
-				productionRules[rule.NonTerminal].AddReplacements(rule);
-			} else {
-				productionRules.Add(rule.NonTerminal, rule);
+			if (!productionRules.ContainsKey(rule.NonTerminal)) {
+				productionRules[rule.NonTerminal] = new List<ProductionRule>();
 			}
+			productionRules[rule.NonTerminal].Add(rule);
 		}
 
 		/// <summary>
@@ -91,25 +96,20 @@ namespace RoboCup.AtHome.CommandGenerator
 			return s[bcc..cc];
 		}
 
-		/// <summary>
-		/// Gets a random replacement for the provided non-terminal symbol.
-		/// </summary>
-		/// <param name="nonTerminal">The non-terminal symbol for which a
-		/// random replacement will be searched</param>
-		/// <param name="rnd">Random number generator used to choose a replacement</param>
-		/// <returns>A replacement string. If the non-terminal symbol does not
-		/// belong to the grammar or contains no productions, an empty string
-		/// is returned.</returns>
-		private string FindReplacement(string nonTerminal, Random rnd){
-			ProductionRule rule;
-
-			if (!this.productionRules.ContainsKey (nonTerminal))
-				return String.Empty;
-			rule = this.productionRules [nonTerminal];
-			int max = rule.Replacements.Count;
-			if (max < 1)
-				return String.Empty;
-			return rule.Replacements [rnd.Next (0, max)];
+        /// <summary>
+        /// Gets a random replacement for the provided non-terminal symbol.
+        /// </summary>
+        /// <param name="nonTerminal">The non-terminal symbol for which a
+        /// random replacement will be searched</param>
+        /// <param name="random">Random number generator used to choose a replacement</param>
+        /// <returns>A replacement string. If the non-terminal symbol does not
+        /// belong to the grammar or contains no productions, an empty string
+        /// is returned.</returns>
+        private ProductionRule.Replacement FindReplacement(string nonTerminal, Random random)
+        {
+            if (!productionRules.ContainsKey(nonTerminal)) return null;
+            var rule = productionRules[nonTerminal].SelectUniform(random);
+			return rule.PickReplacement(random);
 		}
 
         /// <summary>
@@ -120,23 +120,9 @@ namespace RoboCup.AtHome.CommandGenerator
         /// <returns>A randomly generated sentence.</returns>
         public TaskNode GenerateSentence(Random rnd)
         {
-			string option = FindReplacement("$Main", rnd);
-			TaskNode root = SolveNonTerminals(option, rnd);
-			root.Term = "$Main";
+			TaskNode root = SolveNonTerminals("$Main", rnd);
 			root.Tier = Tier;
 			return root;
-		}
-
-		/// <summary>
-		/// Solves all the non-terminal symbols within the given sentence.
-		/// </summary>
-		/// <param name="sentence">A string with non-terminal symbols to replace.</param>
-		/// <param name="rnd">Random number generator used to choose the
-		/// productions and generate the sentence</param>
-		/// <returns>A string with terminal symbols only</returns>
-		private TaskNode SolveNonTerminals (string sentence, Random rnd)
-		{
-			return SolveNonTerminals(sentence, rnd, 0);
 		}
 
 		/// <summary>
@@ -150,22 +136,22 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// When it reach 1000 the production is aborted.</param>
 		/// <returns>A string with terminal symbols only</returns>
 		/// <remarks>Recursive function</remarks>
-		private TaskNode SolveNonTerminals (string sentence, Random rnd, int stackCounter)
+		private TaskNode SolveNonTerminals (string nonTerminal, Random rnd, int stackCounter = 0)
 		{
 			if (++stackCounter > 999)
 				throw new StackOverflowException ();
 
-			TaskNode node = new(null);
-			string[] parts = ProductionRule.SplitRule(sentence);
+            TaskNode node = new(nonTerminal, isNonTerminal: true);
+			node.Replacement = FindReplacement(nonTerminal, rnd);
+            string[] parts = ProductionRule.SplitRule(node.Replacement?.Value ?? "");
 			foreach (string part in parts) {
 				if (part.Contains("$")) {
-					string replacement = FindReplacement(part, rnd);
-					TaskNode child = SolveNonTerminals(replacement, rnd, stackCounter + 1);
-					child.Term = part;
+					TaskNode child = SolveNonTerminals(part, rnd, stackCounter + 1);
+					child.Parent.SetTarget(node);
 					node.Children.Add(child);
 				} else {
-					TaskNode child = new(node);
-					child.StringValue = part;
+					TaskNode child = new(part, isNonTerminal: false);
+					child.Parent.SetTarget(node);
 					node.Children.Add(child);
 				}
 			}
