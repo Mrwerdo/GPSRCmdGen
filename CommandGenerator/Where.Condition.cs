@@ -35,8 +35,8 @@ namespace RoboCup.AtHome.CommandGenerator
 					switch(this.ValueType){
 						case '0': return CompareNull(value);
 						case 'B': return CompareBoolean(value);
-						case 's': return (value == null) ? false : Compare(this.Value, value);
-						case 'n': return (value == null) ? false : Compare(Double.Parse(this.Value), (double)value);
+						case 's': return value != null && Compare(this.Value, value);
+						case 'n': return value != null && Compare(double.Parse(this.Value), (double)value);
 					}
 				}
 				catch{
@@ -59,62 +59,61 @@ namespace RoboCup.AtHome.CommandGenerator
 				if ((obj == null) || !obj.HasProperty(this.PropertyName))
 					return null;
 
-				switch (this.ValueType)
-				{
-					case 'n': return Double.Parse(obj.Properties[this.PropertyName]);
-					case 'B': return Boolean.Parse(obj.Properties[this.PropertyName]);
-					case 's':
-					default: return obj.Properties[this.PropertyName];
-				}
-			}
+                return this.ValueType switch
+                {
+                    'n' => Double.Parse(obj.Properties[this.PropertyName]),
+                    'B' => Boolean.Parse(obj.Properties[this.PropertyName]),
+                    _ => obj.Properties[this.PropertyName],
+                };
+            }
 
 			private bool Compare(double a, double b){
-				switch(this.Operator)
-				{
-					case "=": return a == b;
-					case "!=": return a != b;
-					case ">": return a > b;
-					case ">=": return a >= b;
-					case "<": return a < b;
-					case "<=": return a <= b;
-				}
-				return false;
-			}
+                return Operator switch
+                {
+                    "=" => a == b,
+                    "!=" => a != b,
+                    ">" => a > b,
+                    ">=" => a >= b,
+                    "<" => a < b,
+                    "<=" => a <= b,
+                    _ => false,
+                };
+            }
 
 			private bool Compare(string a, string b){
-				switch(this.Operator)
-				{
-					case "=": return a == b;
-					case "!=": return a != b;
-				}
-				return false;
-			}
+                return Operator switch
+                {
+                    "=" => a == b,
+                    "!=" => a != b,
+                    _ => false,
+                };
+            }
 
 			private bool Compare(string a, object b){
-				if (b is INameable)
-					return Compare(a, ((INameable)b).Name);
+				if (b is INameable nameable)
+					return Compare(a, nameable.Name);
 				return Compare(a, Convert.ToString(b));
 			}
 
 			private bool CompareBoolean(object value){
-				bool b = (value == null) ? false : (bool)value;
-				bool a = Boolean.Parse(this.Value);
-				switch(this.Operator)
-				{
-					case "=": return a == b;
-					case "!=": return a != b;
-				}
-				return false;
-			}
+				bool b = value != null && (bool)value;
+				bool a = bool.Parse(Value);
+                return Operator switch
+                {
+                    "=" => a == b,
+                    "!=" => a != b,
+                    _ => false,
+                };
+            }
 
 			private bool CompareNull(object value){
-				switch(this.Operator)
-				{
-					case "=": return value == null;
-					case "!=": return value != null;
-				}
-				return false;
-			}
+                return Operator switch
+                {
+                    "=" => value == null,
+                    "!=" => value != null,
+                    _ => false,
+                };
+            }
 
 			public override string ToString()
 			{
@@ -126,19 +125,17 @@ namespace RoboCup.AtHome.CommandGenerator
 			#region Static members
 
 			internal static Condition Parse(string s, ref int cc){
-				// A where clause starts with an identifier followed by a binary operator
-				// and ends with a value. The type pattern is: io[sn]
+                // A where clause starts with an identifier followed by a binary operator
+                // and ends with a value. The type pattern is: io[sn]
 
-				char type;
-				Condition condition = new Condition();
-
-				condition.PropertyName = WhereParser.ReadNext(s, ref cc, out type);
-				if (type != 'i')
+                Condition condition = new();
+                condition.PropertyName = ReadNext(s, ref cc, out char type);
+                if (type != 'i')
 					return null;
-				condition.Operator = WhereParser.ReadNext(s, ref cc, out type);
+				condition.Operator = ReadNext(s, ref cc, out type);
 				if (type != 'o')
 					return null;
-				condition.Value = WhereParser.ReadNext(s, ref cc, out type);
+				condition.Value = ReadNext(s, ref cc, out type);
 				condition.ValueType = type;
 				if(type.IsAnyOf('0', 'B', 'n', 's'))
 					return condition;

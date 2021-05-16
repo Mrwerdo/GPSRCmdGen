@@ -59,16 +59,16 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 		public override void Run()
 		{
 			Task task = null;
-			char opc = '\0';
-			Setup();
-			RunOption('\r', ref task);
-			do
-			{
-				opc = GetOption();
-				RunOption(opc, ref task);
-			}
-			while (opc != '\0');
-		}
+            Setup();
+            RunOption('\r', ref task);
+            char opc;
+            do
+            {
+                opc = GetOption();
+                RunOption(opc, ref task);
+            }
+            while (opc != '\0');
+        }
 
 		/// <summary>
 		/// Executes the user's option
@@ -83,7 +83,7 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 					return;
 
 				case 't':
-					DisplayQRText();
+                    DisplayQRText();
 					return;
 
 				case 'q':
@@ -140,7 +140,7 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 		/// <param name="args">Arguments given to the application.</param>
 		private static void ParseArgs (string[] args)
 		{
-			Program p = new Program ();
+			Program p = new();
 
 			p.Setup ();
 			for (int i = 0; i < args.Length; ++i){
@@ -153,11 +153,10 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 
 		private static void DoBulk(Program p, string[] args, ref int i)
 		{
-			int dCount;
-			if ((args.Length < (i + 2)) || !Int32.TryParse(args[++i], out dCount) || (dCount < 1))
-				dCount = 100;
+            if ((args.Length < (i + 2)) || !Int32.TryParse(args[++i], out int dCount) || (dCount < 1))
+                dCount = 100;
 
-			Console.WriteLine("Generating {0} examples in bulk mode", dCount);
+            Console.WriteLine("Generating {0} examples in bulk mode", dCount);
 			try
 			{
 				BulkExamples(p, dCount);
@@ -171,21 +170,19 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 			if (!Directory.Exists(oDir))
 				Directory.CreateDirectory(oDir);
 			string oFile = Path.Combine(oDir, String.Format("{0}.txt", oDir));
-			using (StreamWriter writer = new StreamWriter(oFile, false, System.Text.Encoding.UTF8))
-			{
-				for (int i = 1; i <= count; ++i)
-				{
-					Task task = p.GetTask();
-					if (task == null) continue;
-					string sTask = task.ToString().Trim();
-					if (sTask.Length < 1) continue;
-					sTask = sTask.Substring(0, 1).ToUpper() + sTask.Substring(1);
+            using StreamWriter writer = new(oFile, false, System.Text.Encoding.UTF8);
+            for (int i = 1; i <= count; ++i)
+            {
+                Task task = p.GetTask();
+                if (task == null) continue;
+                string sTask = task.ToString().Trim();
+                if (sTask.Length < 1) continue;
+                sTask = sTask[0..1].ToUpper() + sTask[1..];
 
-					WriteTaskToFile(writer, task, sTask, i);
-					GenerateTaskQR(sTask, i, oDir);
-				}
-			}
-		}
+                WriteTaskToFile(writer, task, sTask, i);
+                GenerateTaskQR(sTask, i, oDir);
+            }
+        }
 
 		private static void WriteTaskToFile(StreamWriter writer, Task task, string sTask, int i)
 		{
@@ -198,7 +195,7 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 			writer.WriteLine();
 			writer.WriteLine(sTask);
 			writer.WriteLine();
-			List<string> remarks = new List<string>();
+			List<string> remarks = new();
 			foreach (Token token in task.Tokens)
 			{
 				if (token.Metadata.Count < 1)

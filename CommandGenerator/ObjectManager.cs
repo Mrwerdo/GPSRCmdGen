@@ -9,7 +9,7 @@ namespace RoboCup.AtHome.CommandGenerator
 {
 	public class ObjectManager : IEnumerable<Category>
 	{
-		private Dictionary<string, Category> categories;
+		private readonly Dictionary<string, Category> categories;
 
 		private ObjectManager ()
 		{
@@ -32,7 +32,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
 			get
 			{
-				List<Object> objects = new List<Object>(100);
+				List<Object> objects = new(100);
 				foreach (Category c in this.categories.Values)
 				{
 					foreach (Object o in c.Objects)
@@ -111,7 +111,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		public override string ToString()
 		{
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new();
 			foreach (Category c in this.categories.Values){
 				sb.Append(c.Name);
 				sb.Append(" (");
@@ -160,7 +160,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		#region Singleton
 
-		private static ObjectManager instance;
+		private static readonly ObjectManager instance;
 		static ObjectManager() { instance = new ObjectManager(); }
 
 		public static ObjectManager Instance { get { return instance; } }

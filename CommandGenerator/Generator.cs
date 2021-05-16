@@ -17,7 +17,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Random numbers generator
 		/// </summary>
-		private Random rnd;
+		private readonly Random rnd;
 		/// <summary>
 		/// Sorted difficulty degrees from the hardes to the easiest
 		/// </summary>
@@ -136,7 +136,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				{
 					TaskNode root = GetTaskPrototype(tier);
 					string taskPrototype = root.Render();
-					WildcardReplacer replacer = new WildcardReplacer(this, tier);
+					WildcardReplacer replacer = new(this, tier);
 					if (String.IsNullOrEmpty(taskPrototype))
 						return null;
 					Task t = replacer.GetTask(taskPrototype);
@@ -165,7 +165,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				{
 					TaskNode root = GetTaskPrototype(grammarName);
 					string taskPrototype = root.Render();
-					WildcardReplacer replacer = new WildcardReplacer(this, tier);
+					WildcardReplacer replacer = new(this, tier);
 					if (String.IsNullOrEmpty(taskPrototype))
 						return null;
 					Task t = replacer.GetTask(taskPrototype);
@@ -275,12 +275,12 @@ namespace RoboCup.AtHome.CommandGenerator
 		private T GetTieredElement<T>(DifficultyDegree tier, List<T> baseList) where T : ITiered{
 
 			if ((baseList == null) || (baseList.Count < 1))
-				return default(T); // throw new Exception ("Provided baselist is null or empty");
+				return default;
 
 			// Get a list with all the elements of the requested difficulty degree
-			List<T> tieredList = new List<T> (baseList.Where(idd => idd.Tier == tier));
+			List<T> tieredList = new(baseList.Where(idd => idd.Tier == tier));
 			if (tieredList.Count < 1)
-				return default(T); //throw new Exception("No elements were found for the requested difficulty degree");
+				return default;
 
 			// Return random object
 			return tieredList[rnd.Next(tieredList.Count)];
@@ -294,7 +294,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		public T RandomPick<T>(IList <T> source){
 			if (source == null)
-				throw new ArgumentNullException ("Source is null.");
+				throw new ArgumentNullException(nameof(source));
 			if (source.Count < 1)
 				throw new InvalidOperationException ("The source sequence is empty.");
 			return source [rnd.Next (0, source.Count)];
@@ -308,7 +308,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <typeparam name="T">The type of the elements of source.</typeparam>
 		public T RandomPick<T>(params T [] source){
 			if (source == null)
-				throw new ArgumentNullException ("Source is null.");
+				throw new ArgumentNullException(nameof(source));
 			if (source.Length < 1)
 				throw new InvalidOperationException ("The source sequence is empty.");
 			return source [rnd.Next (0, source.Length)];

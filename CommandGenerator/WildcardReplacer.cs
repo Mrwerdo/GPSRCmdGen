@@ -19,12 +19,12 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Stores all found wildcards contained the working task
 		/// </summary>
-		private List<TextWildcard> textWildcards;
+		private readonly List<TextWildcard> textWildcards;
 
 		/// <summary>
 		/// Groups all wildcards stored by keycode
 		/// </summary>
-		private Dictionary<string, Wildcard> wildcards;
+		private readonly Dictionary<string, Wildcard> wildcards;
 
 		/// <summary>
 		/// Stores the index of the wildcard being processed in the wildcards list
@@ -44,7 +44,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// The maximum difficulty degree to be used during the replacement
 		/// </summary>
-		private DifficultyDegree tier;
+		private readonly DifficultyDegree tier;
 
 		/// <summary>
 		/// List of available categories
@@ -166,21 +166,13 @@ namespace RoboCup.AtHome.CommandGenerator
 
 
 
-			switch(w.Keyword)
-			{
-				case "male":
-					w.Replacement = this.avNames.PopFirst(n => n.Gender == Gender.Male, w.Where);
-					break;
-
-				case "female":
-					w.Replacement = this.avNames.PopFirst(n => n.Gender == Gender.Female, w.Where);
-					break;
-
-				default:
-					w.Replacement = !String.IsNullOrEmpty(w.Where) ? this.avNames.PopFirst(w.Where) : this.avNames.PopLast();
-					break;
-			}
-			w.Obfuscated = new Obfuscator("a person");
+            w.Replacement = w.Keyword switch
+            {
+                "male" => this.avNames.PopFirst(n => n.Gender == Gender.Male, w.Where),
+                "female" => this.avNames.PopFirst(n => n.Gender == Gender.Female, w.Where),
+                _ => !String.IsNullOrEmpty(w.Where) ? this.avNames.PopFirst(w.Where) : this.avNames.PopLast(),
+            };
+            w.Obfuscated = new Obfuscator("a person");
 		}
 
 		/// <summary>
@@ -194,29 +186,17 @@ namespace RoboCup.AtHome.CommandGenerator
 			if ((w.Name == "object") && String.IsNullOrEmpty(w.Where))
 				w.Keyword = (w.Type == null) ? generator.RandomPick ("kobject", "aobject") : String.Format("{0}object", w.Type[0]);
 
-			switch(w.Keyword)
-			{
-				case "aobject":
-					w.Replacement = this.avObjects.PopFirst(o => o.Type == ObjectType.Alike, w.Where);
-					break;
-
-				case "kobject":
-					w.Replacement = this.avObjects.PopFirst(o => o.Type == ObjectType.Known, w.Where);
-					break;
-
-				// case "uobject":
-				// 	w.Replacement = GPSRObject.Unknown;
-				// 	break;
-
-				case "sobject":
-					w.Replacement = this.avObjects.PopFirst(o => o.Type == ObjectType.Special, w.Where);
-					break;
-
-				default:
-					w.Replacement = !String.IsNullOrEmpty(w.Where) ? this.avObjects.PopFirst(w.Where) : this.avObjects.PopLast();
-					break;
-			}
-			w.Obfuscated = ((Object)w.Replacement).Category;
+            w.Replacement = w.Keyword switch
+            {
+                "aobject" => this.avObjects.PopFirst(o => o.Type == ObjectType.Alike, w.Where),
+                "kobject" => this.avObjects.PopFirst(o => o.Type == ObjectType.Known, w.Where),
+                // case "uobject":
+                // 	w.Replacement = GPSRObject.Unknown;
+                // 	break;
+                "sobject" => this.avObjects.PopFirst(o => o.Type == ObjectType.Special, w.Where),
+                _ => !String.IsNullOrEmpty(w.Where) ? this.avObjects.PopFirst(w.Where) : this.avObjects.PopLast(),
+            };
+            w.Obfuscated = ((Object)w.Replacement).Category;
 		}
 
 		/// <summary>
@@ -279,7 +259,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				throw new Exception("Requested too many elements (count is greater than objects in baseList)");
 
 			IEnumerable<T> ie = baseList.Where(item => (int)item.Tier <= (int)this.tier);
-			List<T> tieredList = new List<T>(ie);
+			List<T> tieredList = new(ie);
 			return tieredList;
 		}
 
@@ -293,9 +273,9 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		/// <param name="taskPrototype">The task prototype string.</param>
 		/// <param name="index">Start position within the task prototype.</param>
-		private Token TokenizeSubstring(string taskPrototype, int index)
+		private static Token TokenizeSubstring(string taskPrototype, int index)
 		{
-			string ss = taskPrototype.Substring (index);
+			string ss = taskPrototype[index..];
 			return String.IsNullOrEmpty (ss) ? null : new Token (ss);
 		}
 
@@ -308,11 +288,11 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// the start of the literal string</param>
 		/// <param name="m">The regular expression match object that contains the next
 		/// wildcard.</param>
-		private Token TokenizeLeftLiteralString(string taskPrototype, ref int cc, TextWildcard w)
+		private static Token TokenizeLeftLiteralString(string taskPrototype, ref int cc, TextWildcard w)
 		{
 			if (cc > w.Index)
 				return null;
-			string ss = taskPrototype.Substring (cc, w.Index - cc);
+			string ss = taskPrototype[cc..w.Index];
 			cc = w.Index + w.Value.Length;
 			return String.IsNullOrEmpty (ss) ? null : new Token (ss);
 		}
@@ -359,7 +339,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="keyword">The new keyword.</param>
 		private void ChangeWildcardKeyword(string keycode, string keyword){
 			if (String.IsNullOrEmpty (keycode))
-				throw new ArgumentNullException ("keycode is null");
+                throw new ArgumentNullException(nameof(keycode));
 			if (!wildcards.ContainsKey (keycode))
 				throw new InvalidOperationException ("Unknown keycode. No wildcard has been added with the provided keycode");
 			wildcards[keycode].Keyword = keyword;
@@ -454,33 +434,32 @@ namespace RoboCup.AtHome.CommandGenerator
 		private void FindReplacements(){
 			// List<Wildcard> whereless = new List<Wildcard>(this.wildcards.Count);
 			// List<Wildcard> whereSimple = new List<Wildcard>(this.wildcards.Count);
-			Queue<Wildcard> whereNested = new Queue<Wildcard>(this.wildcards.Count);
+			Queue<Wildcard> whereNested = new(this.wildcards.Count);
 			// STEP 1: Wildcards not containing nested wildcards in the WHERE clause
 			//         are replaced on the fly, while others are left for later.
 			foreach (KeyValuePair<string,Wildcard> p in this.wildcards)
 			{
-				if (p.Value.Where.IndexOf('{') == -1)
+				if (!p.Value.Where.Contains('{'))
 					FindReplacement(p.Value);
 				else
 					whereNested.Enqueue(p.Value);
 			}
 
-			// STEP 2: Replace nested wildcards in WHERE clauses
-			//         This will iterate over the list of wildcards with nested ones
-			//         in WHERE clauses until the list is empty or until a loop has
-			//         been done with no changes.
-			int initial = whereNested.Count;
-			while (whereNested.Count > 0)
+            // STEP 2: Replace nested wildcards in WHERE clauses
+            //         This will iterate over the list of wildcards with nested ones
+            //         in WHERE clauses until the list is empty or until a loop has
+            //         been done with no changes.
+            while (whereNested.Count > 0)
 			{
-				// Step 2.1: Set the initial counter
-				initial = whereNested.Count;
-				// STEP 2.2: Dequeue the wildcard
-				Wildcard w = whereNested.Dequeue();
+                // Step 2.1: Set the initial counter
+                int initial = whereNested.Count;
+                // STEP 2.2: Dequeue the wildcard
+                Wildcard w = whereNested.Dequeue();
 				bool allReplaced = true;
 				// STEP 2.3: Look for TextWildcards with nested elements in WHERE clause
 				foreach (TextWildcard tw in w)
 				{
-					if ((tw.Where == null) || (tw.Where.IndexOf('{') == -1))
+					if ((tw.Where == null) || (!tw.Where.Contains('{')))
 						continue;
 					string twWhere = tw.Where;
 					// STEP 2.4: Attempt to replace nested wildcards in each TextWildcard.
@@ -499,7 +478,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				// STEP 2.6: Compare the initial counter with the number of elements in the queue.
 				//           If the number matches, then no replacement was made.
 				//           We quit to prevent infinite loop
-				if (initial == whereNested.Count())
+				if (initial == whereNested.Count)
 					break;
 			}
 		}
@@ -547,7 +526,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			ReplaceTokens();
 
 			// Build the task, add the tokens, and return it.
-			Task task = new Task () { Tokens = tokens };
+			Task task = new() { Tokens = tokens };
 			return task;
 		}
 
@@ -578,8 +557,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		private void ParseNestedWildcardsHelper(ref string s){
 			int cc = 0;
 			TextWildcard inner;
-			s = s ?? String.Empty;
-			StringBuilder sb = new StringBuilder(s.Length);
+			s ??= String.Empty;
+			StringBuilder sb = new(s.Length);
 
 			do {
 				// Read the string from cc till the next open brace (wildcard delimiter).
@@ -631,7 +610,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				while ((cc < s.Length) && (s [cc] != '{'))
 					++cc;
 				// Wildcard found. Extract the string to the left
-				string left = s.Substring (bcc, cc - bcc);
+				string left = s[bcc..cc];
 				// Store the string at the left of the wildcard as token
 				tokens.Add (new Token (left));
 				// If the end of the string has been reached, quit
@@ -659,7 +638,8 @@ namespace RoboCup.AtHome.CommandGenerator
 					continue;
 				bool obfuscated = false;
 				int keyCodeLength = tValue.Length - 2;
-				if (tValue [tValue.Length - 2] == '?') {
+                if (tValue[^2] == '?')
+                {
 					--keyCodeLength;
 					obfuscated = true;
 				}
@@ -696,7 +676,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			TextWildcard inner;
 			if (String.IsNullOrEmpty (s))
 				return false;
-			StringBuilder sb = new StringBuilder (s.Length);
+			StringBuilder sb = new(s.Length);
 
 			do {
 				// Fetch the string from cc till the next open brace (wildcard delimiter).

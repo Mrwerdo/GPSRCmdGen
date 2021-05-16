@@ -10,12 +10,9 @@ namespace RoboCup.AtHome.CommandGenerator {
             }
             var embeddedProvider = new EmbeddedFileProvider(assembly);
             var o = embeddedProvider.GetFileInfo(filename);
-            using (var reader = o.CreateReadStream())
-            {
-                using (var r = new StreamReader(reader)) {
-                    return r.ReadToEnd();
-                }
-            }
+            using var reader = o.CreateReadStream();
+            using var r = new StreamReader(reader);
+            return r.ReadToEnd();
         }
 
         public static string FormatSpecification {

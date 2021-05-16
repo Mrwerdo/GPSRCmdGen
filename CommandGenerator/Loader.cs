@@ -83,11 +83,11 @@ namespace RoboCup.AtHome.CommandGenerator
 		public static List<T> LoadArray<T>(string filePath)
 		{
 			T[] array = null;
-			List<T> list = new List<T>();
-			using (StreamReader reader = new StreamReader(filePath, ASCIIEncoding.UTF8))
+			List<T> list = new();
+			using (StreamReader reader = new(filePath, ASCIIEncoding.UTF8))
 			{
-				XmlSerializer serializer = new XmlSerializer (typeof(T[]));
-				serializer.UnknownAttribute+= new XmlAttributeEventHandler(serializer_UnknownAttribute);
+				XmlSerializer serializer = new(typeof(T[]));
+				serializer.UnknownAttribute+= new XmlAttributeEventHandler(Serializer_UnknownAttribute);
 				array = (T[])serializer.Deserialize(reader);
 				reader.Close();
 			}
@@ -105,10 +105,10 @@ namespace RoboCup.AtHome.CommandGenerator
 		public static T Load<T>(string filePath)
 		{
 			T item;
-			using (StreamReader reader = new StreamReader(filePath, ASCIIEncoding.UTF8))
+			using (StreamReader reader = new(filePath, ASCIIEncoding.UTF8))
 			{
-				XmlSerializer serializer = new XmlSerializer(typeof(T));
-				serializer.UnknownAttribute+= new XmlAttributeEventHandler(serializer_UnknownAttribute);
+				XmlSerializer serializer = new(typeof(T));
+				serializer.UnknownAttribute+= new XmlAttributeEventHandler(Serializer_UnknownAttribute);
 				item = (T)serializer.Deserialize(reader);
 				reader.Close();
 
@@ -125,10 +125,10 @@ namespace RoboCup.AtHome.CommandGenerator
 		public static T LoadXmlString<T>(string xml)
 		{
 			T item;
-			using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(xml ?? String.Empty)))
+			using (MemoryStream ms = new(Encoding.UTF8.GetBytes(xml ?? String.Empty)))
 			{
-				XmlSerializer serializer = new XmlSerializer(typeof(T));
-				serializer.UnknownAttribute+= new XmlAttributeEventHandler(serializer_UnknownAttribute);
+				XmlSerializer serializer = new(typeof(T));
+				serializer.UnknownAttribute+= new XmlAttributeEventHandler(Serializer_UnknownAttribute);
 				item = (T)serializer.Deserialize(ms);
 				ms.Close();
 
@@ -136,11 +136,10 @@ namespace RoboCup.AtHome.CommandGenerator
 			return item;
 		}
 
-		private static void serializer_UnknownAttribute(object sender, XmlAttributeEventArgs e){
-			IDescribable desc = e.ObjectBeingDeserialized as IDescribable;
-			if (desc == null)
-				return;
-			desc.Properties.Add(e.Attr.Name, e.Attr.Value);
+		private static void Serializer_UnknownAttribute(object sender, XmlAttributeEventArgs e){
+            if (e.ObjectBeingDeserialized is not IDescribable desc)
+                return;
+            desc.Properties.Add(e.Attr.Name, e.Attr.Value);
 		}
 
 		/// <summary>
@@ -149,21 +148,19 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="filePath">The path of the XML file to store the objectt within.</param>
 		/// <param name="o">The object to serialize and save.</param>
 		public static void Save(string filePath, object o){
-			XmlWriterSettings settings = new XmlWriterSettings();
+			XmlWriterSettings settings = new();
 			settings.Encoding = new UnicodeEncoding(false, false); // no BOM in a .NET string
 			settings.Indent = true;
 			settings.OmitXmlDeclaration = false;
-			using (StreamWriter stream = new StreamWriter(filePath))
-			{
-				using (XmlWriter xmlWriter = XmlWriter.Create(stream, settings))
-				{
-					XmlSerializer serializer = new XmlSerializer(o.GetType());
-					serializer.Serialize(xmlWriter, o, ns);
-					xmlWriter.Close();
-				}
-				stream.Close();
-			}
-		}
+            using StreamWriter stream = new(filePath);
+            using (XmlWriter xmlWriter = XmlWriter.Create(stream, settings))
+            {
+                XmlSerializer serializer = new(o.GetType());
+                serializer.Serialize(xmlWriter, o, ns);
+                xmlWriter.Close();
+            }
+            stream.Close();
+        }
 
 		/// <summary>
 		/// Loads a list of Grammar objects from the grammars subdirectory.
@@ -194,7 +191,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
 			Grammar grammar;
             string[] gfs = FindGrammars(grammarsDirectoryName);
-			List<Grammar> grammars = new List<Grammar> (gfs.Length);
+			List<Grammar> grammars = new(gfs.Length);
 			foreach (string gf in gfs) {
 				grammar = Grammar.LoadFromFile (gf);
 				if (grammar != null)
@@ -245,14 +242,14 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
 			string serialized;
 			T[] array = list.ToArray ();
-			XmlWriterSettings settings = new XmlWriterSettings();
+			XmlWriterSettings settings = new();
 			settings.Encoding = new UnicodeEncoding(false, false); // no BOM in a .NET string
 			settings.Indent = true;
 			settings.OmitXmlDeclaration = false;
-			using (StringWriter textWriter = new StringWriter())
+			using (StringWriter textWriter = new())
 			{
 				using (XmlWriter xmlWriter = XmlWriter.Create(textWriter, settings)) {
-					XmlSerializer serializer = new XmlSerializer (typeof(T[]));
+					XmlSerializer serializer = new(typeof(T[]));
 					serializer.Serialize (xmlWriter, array, ns);
 				}
 				serialized = textWriter.ToString ();

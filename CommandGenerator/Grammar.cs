@@ -16,7 +16,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Stores the set of production rules (accessible by rule name)
 		/// </summary>
-		private Dictionary<string, ProductionRule> productionRules;
+		private readonly Dictionary<string, ProductionRule> productionRules;
 
 		#endregion
 
@@ -77,7 +77,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="cc">A read header that points to the first character at
 		/// the right of.</param>
 		/// <returns>The non-terminal symbol found.</returns>
-		private string FetchNonTerminal (string s, ref int cc)
+		private static string FetchNonTerminal (string s, ref int cc)
 		{
 			char c;
 			int bcc = cc++;
@@ -88,7 +88,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				else
 					break;
 			}
-			return s.Substring (bcc, cc - bcc);
+			return s[bcc..cc];
 		}
 
 		/// <summary>
@@ -155,7 +155,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			if (++stackCounter > 999)
 				throw new StackOverflowException ();
 
-			TaskNode node = new TaskNode(null);
+			TaskNode node = new(null);
 			string[] parts = ProductionRule.SplitRule(sentence);
 			foreach (string part in parts) {
 				if (part.Contains("$")) {
@@ -164,7 +164,7 @@ namespace RoboCup.AtHome.CommandGenerator
 					child.Term = part;
 					node.Children.Add(child);
 				} else {
-					TaskNode child = new TaskNode(node);
+					TaskNode child = new(node);
 					child.StringValue = part;
 					node.Children.Add(child);
 				}

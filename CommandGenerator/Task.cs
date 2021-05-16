@@ -49,7 +49,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <returns>A <see cref="System.String"/> that represents the current <see cref="RoboCup.AtHome.CommandGenerator.Task"/>.</returns>
 		public override string ToString()
 		{
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new();
 			for (int i = 0; i < tokens.Count; ++i)
 				sb.Append (tokens [i].Name);
 			string s = sb.ToString ();

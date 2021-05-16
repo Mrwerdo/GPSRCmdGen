@@ -54,7 +54,7 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 		/// <summary>
 		/// Stores the properties that describe the object.
 		/// </summary>
-		private Dictionary<string, string> properties;
+		private readonly Dictionary<string, string> properties;
 
 		#endregion
 

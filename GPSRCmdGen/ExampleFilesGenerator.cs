@@ -52,7 +52,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
 		/// <returns><c>true</c> if the user authorizes the overwrite, otherwise <c>false</c></returns>
 		private static bool Overwrite (string file)
 		{
-			FileInfo fi = new FileInfo (file);
+			FileInfo fi = new(file);
 			if (!fi.Exists)
 				return true;
 			Console.Write ("File {0} already exists. Overwrite? [yN]", fi.Name);
@@ -70,16 +70,14 @@ namespace RoboCup.AtHome.GPSRCmdGen
 			fileName = Loader.GetPath("gpsr_grammars", fileName);
 			if (!Overwrite (fileName))
 				return;
-			string Name = name.Substring (0, 1).ToUpper () + name.Substring (1);
+            string Name = name[0..1].ToUpper() + name[1..];
 			header = header.Replace ("${GrammarName}", Name);
-			using (StreamWriter writer = new StreamWriter(fileName)) {
-				writer.WriteLine (header);
-				writer.WriteLine (formatSpec);
-				writer.WriteLine (content);
-				writer.Close ();
-			}
+            using StreamWriter writer = new(fileName); writer.WriteLine(header);
+            writer.WriteLine(formatSpec);
+            writer.WriteLine(content);
+            writer.Close();
 
-		}
+        }
 
 		/// <summary>
 		/// Writes down a set of example grammar files in the grammars sub directory
@@ -93,7 +91,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
 			string formatSpec = Resources.FormatSpecification;
 			string authoring = Resources.GrammarHeader;
 
-			Dictionary<string, string> grammars = new Dictionary<string, string> ();
+			Dictionary<string, string> grammars = new();
 			grammars.Add("category1", GPSRCmdGenResources.GPSRGrammar);
 			grammars.Add("common", GPSRCmdGenResources.CommonRules);
 

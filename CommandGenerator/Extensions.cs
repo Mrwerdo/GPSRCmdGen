@@ -58,8 +58,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <typeparam name="TSource">The type of the elements of source.</typeparam>
 		public static TSource PopFirst<TSource>(this IList<TSource> source, Func<TSource, bool> predicate)
 		{
-			if ((source == null) || (predicate == null))
-				throw new ArgumentNullException ("Source or predicate is null.");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 			if (source.Count < 1)
 				throw new InvalidOperationException ("The source sequence is empty.");
 			for (int i = 0; i < source.Count; ++i) {
@@ -98,8 +98,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="query">A query describing a function to test each element for a condition (ignored when null).</param>
 		/// <typeparam name="TSource">The type of the elements of source.</typeparam>
 		public static TSource PopFirst<TSource>(this List<TSource> source,  Func<TSource, bool> predicate, string query){
-			if ((source == null) || ((predicate == null) && String.IsNullOrEmpty(query)))
-				throw new ArgumentNullException ("Source or predicate and source are null.");
+			if (source == null)  throw new ArgumentNullException(nameof(source));
+            if (predicate == null && String.IsNullOrEmpty(query)) throw new ArgumentNullException(nameof(predicate), "At least predicate or query must be provided.");
 
 			WhereParser.ConditionalStatement statement = WhereParser.Parse(query);
 			if ((predicate == null) && (statement == null))
@@ -120,7 +120,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		public static TSource PopLast<TSource>(this IList<TSource> source)
 		{
 			if (source == null)
-				throw new ArgumentNullException ("Source is null.");
+                throw new ArgumentNullException(nameof(source));
 			if (source.Count < 1)
 				throw new InvalidOperationException ("The source sequence is empty.");
 			TSource item = source[source.Count - 1];
@@ -151,7 +151,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// provided they are not inside of a where clause (i.e. curly braces).
 		/// </summary>
 		public static string[] SmartSplit(this string s, char c) {
-			List<string> parts = new List<string>();
+			List<string> parts = new();
 			int bcc = 0;
 			int cc = 0;
 			int paranthesisCounter = 0;
@@ -168,7 +168,7 @@ namespace RoboCup.AtHome.CommandGenerator
 						continue;
 					}
 				}
-				parts.Add(s.Substring(bcc, cc - bcc));
+				parts.Add(s[bcc..cc]);
 				cc += 1;
 				bcc = cc;
 			}

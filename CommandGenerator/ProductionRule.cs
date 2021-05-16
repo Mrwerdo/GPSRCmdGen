@@ -29,7 +29,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Regular expression for Rule extraction
 		/// </summary>
-		private static Regex rxRuleParser;
+		private static readonly Regex rxRuleParser;
 
 		#endregion
 
@@ -113,7 +113,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			else if (this.replacements.Count == 1)
 				return string.Format ("{0} -> {1}]", this.nonTerminal, this.replacements[0]);
 			int i = 0;
-			StringBuilder sb = new StringBuilder ();
+			StringBuilder sb = new();
 			sb.Append (this.nonTerminal);
 			sb.Append (" -> ");
 			while(i < this.replacements.Count-1) {
@@ -252,7 +252,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		#endregion
 
-		static private Regex nonTerminalIdentifierMatcher = new Regex(@"(\$[0-9A-Za-z_]+)|({.+})");
+		private static readonly Regex nonTerminalIdentifierMatcher = new(@"(\$[0-9A-Za-z_]+)|({.+})");
 
 		/**
 		* Splits a rule , i.e. the right hand side of what this object represents, 
@@ -273,13 +273,13 @@ namespace RoboCup.AtHome.CommandGenerator
 			int nextIndex = first.Index + first.Length;
 			foreach (Match m in matches.Skip(1)) {
 				if (nextIndex != m.Index) {
-					tokens.Add(rule.Substring(nextIndex, m.Index - nextIndex));
+					tokens.Add(rule[nextIndex..m.Index]);
 				}
 				tokens.Add(rule.Substring(m.Index, m.Length));
 				nextIndex = m.Index + m.Length;
 			}
 			if (nextIndex != rule.Length) {
-				tokens.Add(rule.Substring(nextIndex, rule.Length - nextIndex));
+				tokens.Add(rule[nextIndex..]);
 			}
 			return tokens.ToArray();
 		}

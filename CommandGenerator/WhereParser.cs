@@ -47,16 +47,15 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		/// <param name="s">The string to evaluate or null if the parsing failed.</param>
 		public static ConditionalStatement Parse(string s){
-			// This far, unary operators and parentheses are not supported
+            // This far, unary operators and parentheses are not supported
 
-			char type;
-			ConditionalStatement statement = new ConditionalStatement();
-			int cc = 0;
+            ConditionalStatement statement = new();
+            int cc = 0;
 			int bcc = cc;
 			string next;
 
 			// STEP 1: Read first element.
-			next = ReadNext(s, ref cc, out type);
+			next = ReadNext(s, ref cc, out char type);
 			// There are three valid options: identifier, unary and end $
 			// Identifier resets cc and goes to Condition.Parse
 			// Unary writes the operator in statement and expects Condition
@@ -152,7 +151,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			// STEP 3: Return the where substring when the end has been reached.
 			//         In case of error, rewind and return null.
 			if (type == '$')
-				return input.Substring(bcc, cc-bcc);
+				return input[bcc..cc];
 			cc = bcc;
 			return null;
 		}
@@ -266,10 +265,9 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		private static string XtractString(string s, ref int cc, ref char type)
 		{
-			string next;
-			if (!Scanner.XtractDoubleQuotedString(s, ref cc, out next) && !Scanner.XtractSingleQuotedString(s, ref cc, out next))
-				return null;
-			if (next.IsAnyOf("true", "false", "TRUE", "FALSE"))
+            if (!Scanner.XtractDoubleQuotedString(s, ref cc, out string next) && !Scanner.XtractSingleQuotedString(s, ref cc, out next))
+                return null;
+            if (next.IsAnyOf("true", "false", "TRUE", "FALSE"))
 			{
 				type = 'B';
 				next = next.ToLower();

@@ -125,52 +125,54 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 
 		#region Variables
 
-		private static Dictionary<int, string> pronouns;
+		private static readonly Dictionary<int, string> pronouns;
 
 		#endregion
 
 		#region Constructor
 
 		static Pronoun(){
-			pronouns = new Dictionary<int, string> (100);
+            pronouns = new Dictionary<int, string>(100)
+            {
 
-			// Class + Person + Form + Gender?
-			pronouns.Add( (int)Class.PersonalSubjective | (int)Person.First  | (int)Form.Singular, "I");
-			pronouns.Add( (int)Class.PersonalSubjective | (int)Person.Second | (int)Form.Singular, "you");
-			pronouns.Add( (int)Class.PersonalSubjective | (int)Person.Third  | (int)Form.Singular | (int)Gender.Masculine, "he");
-			pronouns.Add( (int)Class.PersonalSubjective | (int)Person.Third  | (int)Form.Singular | (int)Gender.Femenine, "she");
-			pronouns.Add( (int)Class.PersonalSubjective | (int)Person.Third  | (int)Form.Singular | (int)Gender.Neutral, "it");
-			pronouns.Add( (int)Class.PersonalSubjective | (int)Person.First  | (int)Form.Plural, "we");
-			pronouns.Add( (int)Class.PersonalSubjective | (int)Person.Second | (int)Form.Plural, "you");
-			pronouns.Add( (int)Class.PersonalSubjective | (int)Person.Third  | (int)Form.Plural, "they");
+                // Class + Person + Form + Gender?
+                { (int)Class.PersonalSubjective | (int)Person.First | (int)Form.Singular, "I" },
+                { (int)Class.PersonalSubjective | (int)Person.Second | (int)Form.Singular, "you" },
+                { (int)Class.PersonalSubjective | (int)Person.Third | (int)Form.Singular | (int)Gender.Masculine, "he" },
+                { (int)Class.PersonalSubjective | (int)Person.Third | (int)Form.Singular | (int)Gender.Femenine, "she" },
+                { (int)Class.PersonalSubjective | (int)Person.Third | (int)Form.Singular | (int)Gender.Neutral, "it" },
+                { (int)Class.PersonalSubjective | (int)Person.First | (int)Form.Plural, "we" },
+                { (int)Class.PersonalSubjective | (int)Person.Second | (int)Form.Plural, "you" },
+                { (int)Class.PersonalSubjective | (int)Person.Third | (int)Form.Plural, "they" },
 
-			pronouns.Add( (int)Class.PersonalObjective | (int)Person.First  | (int)Form.Singular, "me");
-			pronouns.Add( (int)Class.PersonalObjective | (int)Person.Second | (int)Form.Singular, "you");
-			pronouns.Add( (int)Class.PersonalObjective | (int)Person.Third  | (int)Form.Singular | (int)Gender.Masculine, "him");
-			pronouns.Add( (int)Class.PersonalObjective | (int)Person.Third  | (int)Form.Singular | (int)Gender.Femenine, "her");
-			pronouns.Add( (int)Class.PersonalObjective | (int)Person.Third  | (int)Form.Singular | (int)Gender.Neutral, "it");
-			pronouns.Add( (int)Class.PersonalObjective | (int)Person.First  | (int)Form.Plural, "us");
-			pronouns.Add( (int)Class.PersonalObjective | (int)Person.Second | (int)Form.Plural, "you");
-			pronouns.Add( (int)Class.PersonalObjective | (int)Person.Third  | (int)Form.Plural, "them");
+                { (int)Class.PersonalObjective | (int)Person.First | (int)Form.Singular, "me" },
+                { (int)Class.PersonalObjective | (int)Person.Second | (int)Form.Singular, "you" },
+                { (int)Class.PersonalObjective | (int)Person.Third | (int)Form.Singular | (int)Gender.Masculine, "him" },
+                { (int)Class.PersonalObjective | (int)Person.Third | (int)Form.Singular | (int)Gender.Femenine, "her" },
+                { (int)Class.PersonalObjective | (int)Person.Third | (int)Form.Singular | (int)Gender.Neutral, "it" },
+                { (int)Class.PersonalObjective | (int)Person.First | (int)Form.Plural, "us" },
+                { (int)Class.PersonalObjective | (int)Person.Second | (int)Form.Plural, "you" },
+                { (int)Class.PersonalObjective | (int)Person.Third | (int)Form.Plural, "them" },
 
-			pronouns.Add( (int)Class.PossessiveAbsolute | (int)Person.First  | (int)Form.Singular, "mine");
-			pronouns.Add( (int)Class.PossessiveAbsolute | (int)Person.Second | (int)Form.Singular, "yours");
-			pronouns.Add( (int)Class.PossessiveAbsolute | (int)Person.Third  | (int)Form.Singular | (int)Gender.Masculine, "his");
-			pronouns.Add( (int)Class.PossessiveAbsolute | (int)Person.Third  | (int)Form.Singular | (int)Gender.Femenine, "hers");
-			pronouns.Add( (int)Class.PossessiveAbsolute | (int)Person.Third  | (int)Form.Singular | (int)Gender.Neutral, "its");
-			pronouns.Add( (int)Class.PossessiveAbsolute | (int)Person.First  | (int)Form.Plural, "ours");
-			pronouns.Add( (int)Class.PossessiveAbsolute | (int)Person.Second | (int)Form.Plural, "yours");
-			pronouns.Add( (int)Class.PossessiveAbsolute | (int)Person.Third  | (int)Form.Plural, "theirs");
+                { (int)Class.PossessiveAbsolute | (int)Person.First | (int)Form.Singular, "mine" },
+                { (int)Class.PossessiveAbsolute | (int)Person.Second | (int)Form.Singular, "yours" },
+                { (int)Class.PossessiveAbsolute | (int)Person.Third | (int)Form.Singular | (int)Gender.Masculine, "his" },
+                { (int)Class.PossessiveAbsolute | (int)Person.Third | (int)Form.Singular | (int)Gender.Femenine, "hers" },
+                { (int)Class.PossessiveAbsolute | (int)Person.Third | (int)Form.Singular | (int)Gender.Neutral, "its" },
+                { (int)Class.PossessiveAbsolute | (int)Person.First | (int)Form.Plural, "ours" },
+                { (int)Class.PossessiveAbsolute | (int)Person.Second | (int)Form.Plural, "yours" },
+                { (int)Class.PossessiveAbsolute | (int)Person.Third | (int)Form.Plural, "theirs" },
 
-			pronouns.Add( (int)Class.PossessiveAdjective | (int)Person.First  | (int)Form.Singular, "my");
-			pronouns.Add( (int)Class.PossessiveAdjective | (int)Person.Second | (int)Form.Singular, "your");
-			pronouns.Add( (int)Class.PossessiveAdjective | (int)Person.Third  | (int)Form.Singular | (int)Gender.Masculine, "his");
-			pronouns.Add( (int)Class.PossessiveAdjective | (int)Person.Third  | (int)Form.Singular | (int)Gender.Femenine, "her");
-			pronouns.Add( (int)Class.PossessiveAdjective | (int)Person.Third  | (int)Form.Singular | (int)Gender.Neutral, "its");
-			pronouns.Add( (int)Class.PossessiveAdjective | (int)Person.First  | (int)Form.Plural, "our");
-			pronouns.Add( (int)Class.PossessiveAdjective | (int)Person.Second | (int)Form.Plural, "your");
-			pronouns.Add( (int)Class.PossessiveAdjective | (int)Person.Third  | (int)Form.Plural, "their");
-		}
+                { (int)Class.PossessiveAdjective | (int)Person.First | (int)Form.Singular, "my" },
+                { (int)Class.PossessiveAdjective | (int)Person.Second | (int)Form.Singular, "your" },
+                { (int)Class.PossessiveAdjective | (int)Person.Third | (int)Form.Singular | (int)Gender.Masculine, "his" },
+                { (int)Class.PossessiveAdjective | (int)Person.Third | (int)Form.Singular | (int)Gender.Femenine, "her" },
+                { (int)Class.PossessiveAdjective | (int)Person.Third | (int)Form.Singular | (int)Gender.Neutral, "its" },
+                { (int)Class.PossessiveAdjective | (int)Person.First | (int)Form.Plural, "our" },
+                { (int)Class.PossessiveAdjective | (int)Person.Second | (int)Form.Plural, "your" },
+                { (int)Class.PossessiveAdjective | (int)Person.Third | (int)Form.Plural, "their" }
+            };
+        }
 
 		#endregion
 
@@ -191,20 +193,13 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 				throw new InvalidOperationException ("referral is not a {pron} wildcard");
 			}
 
-			Gender g;
-			switch (referee.Keyword) {
-				case "male":
-					g = Gender.Masculine;
-					break;
-				case "female":
-					g = Gender.Femenine;
-					break;
-				default:
-					g = Gender.Neutral;
-					break;
-			}
-
-			if (!String.IsNullOrEmpty(referral.Type)) {
+            var g = referee.Keyword switch
+            {
+                "male" => Gender.Masculine,
+                "female" => Gender.Femenine,
+                _ => Gender.Neutral,
+            };
+            if (!String.IsNullOrEmpty(referral.Type)) {
 				switch(referral.Type.Substring(0, 3)){
 					case "sub":
 						return Personal.Subjective (Form.Singular, Person.Third, g);
@@ -238,12 +233,12 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 			{
 				get
 				{
-					List<string> all = new List<string>(9);
-					foreach (Pronoun.Person p in Enum.GetValues(typeof(Pronoun.Person)))
+					List<string> all = new(9);
+					foreach (Person p in Enum.GetValues(typeof(Person)))
 					{
-						foreach (Pronoun.Form f in Enum.GetValues(typeof(Pronoun.Form)))
+						foreach (Form f in Enum.GetValues(typeof(Form)))
 						{
-							foreach (Pronoun.Gender g in Enum.GetValues(typeof(Pronoun.Gender)))
+							foreach (Gender g in Enum.GetValues(typeof(Gender)))
 							{
 								string pron = Objective(f, p, g);
 								if(all.Contains(pron)) continue;
@@ -259,12 +254,12 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 			{
 				get
 				{
-					List<string> all = new List<string>(9);
-					foreach (Pronoun.Person p in Enum.GetValues(typeof(Pronoun.Person)))
+					List<string> all = new(9);
+					foreach (Person p in Enum.GetValues(typeof(Person)))
 					{
-						foreach (Pronoun.Form f in Enum.GetValues(typeof(Pronoun.Form)))
+						foreach (Form f in Enum.GetValues(typeof(Form)))
 						{
-							foreach (Pronoun.Gender g in Enum.GetValues(typeof(Pronoun.Gender)))
+							foreach (Gender g in Enum.GetValues(typeof(Gender)))
 							{
 								string pron = Subjective(f, p, g);
 								if(all.Contains(pron)) continue;
@@ -276,7 +271,7 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 				}
 			}
 
-			public static string Objective(Pronoun.Form form, Pronoun.Person person, Pronoun.Gender gender = Pronoun.Gender.Neutral)
+			public static string Objective(Form form, Person person, Gender gender = Pronoun.Gender.Neutral)
 			{
 				int key = (int)Class.PersonalObjective | (int)person | (int)form;
 				if ((form == Form.Singular) && (person == Person.Third))
@@ -284,7 +279,7 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 				return  pronouns [key];
 			}
 
-			public static string Subjective(Pronoun.Form form, Pronoun.Person person,  Pronoun.Gender gender = Pronoun.Gender.Neutral)
+			public static string Subjective(Form form, Person person, Gender gender = Pronoun.Gender.Neutral)
 			{
 				int key = (int)Class.PersonalSubjective | (int)person | (int)form;
 				if ((form == Form.Singular) && (person == Person.Third))
@@ -301,7 +296,7 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 		/// </summary>
 		public static class Possessive
 		{
-			public static string PossessiveAbsolute(Pronoun.Form form, Pronoun.Person person, Pronoun.Gender gender = Pronoun.Gender.Neutral)
+			public static string PossessiveAbsolute(Form form, Person person, Gender gender = Pronoun.Gender.Neutral)
 			{
 				int key = (int)Class.PossessiveAbsolute | (int)person | (int)form;
 				if ((form == Form.Singular) && (person == Person.Third))
@@ -310,7 +305,7 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 
 			}
 
-			public static string PossessiveAdjective(Pronoun.Form form, Pronoun.Person person, Pronoun.Gender gender = Pronoun.Gender.Neutral)
+			public static string PossessiveAdjective(Form form, Person person, Gender gender = Pronoun.Gender.Neutral)
 			{
 				int key = (int)Class.PossessiveAdjective | (int)person | (int)form;
 				if ((form == Form.Singular) && (person == Person.Third))

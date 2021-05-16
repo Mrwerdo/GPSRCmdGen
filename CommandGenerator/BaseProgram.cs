@@ -14,7 +14,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Gets user text from console input and displays it in a QR code
 		/// </summary>
-		protected void DisplayQRText()
+		protected static void DisplayQRText()
 		{
 			Console.WriteLine("Write text for QR code and press INTRO.");
 			Console.Write("QR Text: ");
@@ -98,7 +98,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			Console.WriteLine();
 
 			// Prints task string and metadata
-			sTask = sTask.Substring(0, 1).ToUpper() + sTask.Substring(1);
+			sTask = sTask[0..1].ToUpper() + sTask[1..];
 			do
 			{
 				// sTask = sTask.PadRight(4);
@@ -106,9 +106,9 @@ namespace RoboCup.AtHome.CommandGenerator
 				if (cut >= Console.BufferWidth)
 					cut = sTask.LastIndexOf(' ', Console.BufferWidth-1);
 				Console.WriteLine(sTask.Substring(0, cut));
-				sTask = sTask.Substring(cut).Trim();
+				sTask = sTask[cut..].Trim();
 			} while (!String.IsNullOrEmpty(sTask));
-			PrintTaskMetadata(task);
+            PrintTaskMetadata(task);
 			Console.WriteLine();
 			// Prints another line
 			Console.WriteLine(pad);
@@ -121,14 +121,14 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// Prints the task metadata.
 		/// </summary>
 		/// <param name="task">The task object containing metadata to print.</param>
-		protected void PrintTaskMetadata(Task task)
+		protected static void PrintTaskMetadata(Task task)
 		{
 			Console.WriteLine();
-			List<string> remarks = new List<string>();
+			List<string> remarks = new();
 			// Print named metadata
 			foreach (Token token in task.Tokens)
-				PrintMetadata(token, remarks);
-			PrintRemarks(remarks);
+                PrintMetadata(token, remarks);
+            PrintRemarks(remarks);
 			Console.WriteLine("parse tree:");
 			Console.WriteLine(task.Tree.PrettyTree());
 			Console.WriteLine(task.Tree.RenderCommand());
@@ -139,7 +139,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		/// <param name="token">The token onject containing the metadata to print</param>
 		/// <param name="remarks">A list to store all metadata whose token has no name</param>
-		protected void PrintMetadata(Token token, List<string> remarks)
+		protected static void PrintMetadata(Token token, List<string> remarks)
 		{
 			if (token.Metadata.Count < 1) return;
 			// Store remarks for later
@@ -158,7 +158,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// Prints remaining metadata stored in the remarks list
 		/// </summary>
 		/// <param name="remarks">List of remarks strings</param>
-		protected void PrintRemarks(List<string> remarks)
+		protected static void PrintRemarks(List<string> remarks)
 		{
 			if (remarks.Count > 0)
 			{
@@ -174,15 +174,15 @@ namespace RoboCup.AtHome.CommandGenerator
 		public virtual void Run()
 		{
 			Task task = null;
-			char opc = '\0';
-			Setup();
-			do
-			{
-				opc = GetOption();
-				RunOption(opc, ref task);
-			}
-			while (opc != '\0');
-		}
+            Setup();
+            char opc;
+            do
+            {
+                opc = GetOption();
+                RunOption(opc, ref task);
+            }
+            while (opc != '\0');
+        }
 
 		/// <summary>
 		/// Executes the user's option

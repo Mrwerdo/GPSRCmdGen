@@ -156,22 +156,13 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 		/// Known -> Easy
 		/// Unknown -> Unknown</remarks>
 		public void AddObject(string name, ObjectType type){
-			DifficultyDegree tier;
-			switch (type) {
-				case ObjectType.Alike:
-					tier = DifficultyDegree.Moderate;
-					break;
-
-				case ObjectType.Known:
-					tier = DifficultyDegree.Easy;
-					break;
-
-				default:
-				case ObjectType.Unknown:
-					tier = DifficultyDegree.Unknown;
-					break;
-			}
-			AddObject (name, type, tier);
+            var tier = type switch
+            {
+                ObjectType.Alike => DifficultyDegree.Moderate,
+                ObjectType.Known => DifficultyDegree.Easy,
+                _ => DifficultyDegree.Unknown,
+            };
+            AddObject (name, type, tier);
 		}
 
 		/// <summary>
@@ -181,7 +172,7 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 		/// <param name="type">The type of the object to add.</param>
 		/// <param name="type">The difficulty degree of the object to add.</param>
 		public void AddObject(string name, ObjectType type, DifficultyDegree tier){
-			Object o = new Object (name, type, tier);
+			Object o = new(name, type, tier);
 			this.AddObject (o);
 		}
 

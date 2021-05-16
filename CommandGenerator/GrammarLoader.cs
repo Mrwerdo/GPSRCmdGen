@@ -68,7 +68,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			/// symbol as key and the production rule as value.</param>
 			private static void ExpandRules(Grammar grammar)
 			{
-				List<ProductionRule> ruleList = new List<ProductionRule>(grammar.ProductionRules);
+				List<ProductionRule> ruleList = new(grammar.ProductionRules);
 
 				for (int ix = 0; ix < ruleList.Count; ++ix) {
                     ExpandRule(ix, ruleList, grammar);
@@ -107,7 +107,7 @@ namespace RoboCup.AtHome.CommandGenerator
 						if (!Scanner.FindClosingParenthesis (replacement, ref cc))
 							break;
 						// Get the replacement (subchunk)
-						string subchunk = replacement.Substring (bcc, cc - bcc);
+						string subchunk = replacement[bcc..cc];
 						// Generate a Non-Terminal symbol (name) for the replacement
 						nonTerminal = GenerateNonTerminal(pr.NonTerminal, ref nonTerminalBaseIndex, grammar);
 						// Create and add the production rule
@@ -115,7 +115,7 @@ namespace RoboCup.AtHome.CommandGenerator
 						ruleList.Add (cpr);
 						grammar.AddRule(cpr);
 						// Replace the subchunk with the Non-Terminal symbol
-						replacement = replacement.Substring (0, bcc-1) + nonTerminal + replacement.Substring (cc+1);
+						replacement = replacement.Substring (0, bcc-1) + nonTerminal + replacement[(cc + 1)..];
 						pr.Replacements [i] = replacement;
 						cc = bcc + nonTerminal.Length -2;
 					}
@@ -205,19 +205,20 @@ namespace RoboCup.AtHome.CommandGenerator
 				}
 				if(directive != "import")
 					return;
+                string errMsg = "#ERROR! {void meta:{0}}";
 
-				ProductionRule pr = null;
-				string errMsg = "#ERROR! {void meta:{0}}";
-				if(!File.Exists(path)){
-					errMsg = String.Format(errMsg, String.Format("File {0} not found", path));
-					pr = new ProductionRule(nonTerminal, new String[]{errMsg});
-					grammar.AddRule(pr);
-					return;
-				}
+                ProductionRule pr;
+                if (!File.Exists(path))
+                {
+                    errMsg = String.Format(errMsg, $"File {path} not found");
+                    pr = new ProductionRule(nonTerminal, new String[] { errMsg });
+                    grammar.AddRule(pr);
+                    return;
+                }
 
-				Grammar subGrammar = new GrammarLoader().FromFile(path, true);
+                Grammar subGrammar = new GrammarLoader().FromFile(path, true);
 				if(subGrammar == null){
-					errMsg = String.Format(errMsg, String.Format("Cannot load grammar file {0}", path));
+					errMsg = String.Format(errMsg, $"Cannot load grammar file {path}");
 					pr = new ProductionRule(nonTerminal, new String[]{errMsg});
 					grammar.AddRule(pr);
 					return;
@@ -246,7 +247,7 @@ namespace RoboCup.AtHome.CommandGenerator
 						break;
 					lines.RemoveAt(i);
 				}
-				lines [i] = lines [i].Substring (j+2);
+				lines [i] = lines [i][(j + 2)..];
 			}
 
 			/// <summary>
@@ -262,7 +263,7 @@ namespace RoboCup.AtHome.CommandGenerator
 					return;
 
 				Match m;
-				line = line.Substring (j);
+				line = line[j..];
 				if (String.IsNullOrEmpty (grammar.Name)) {
 					m = rxGrammarNameXtractor.Match (line);
 					if (m.Success)

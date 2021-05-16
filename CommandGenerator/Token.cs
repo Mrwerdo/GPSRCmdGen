@@ -15,19 +15,19 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Stores the original substring in the taks prototype string.
 		/// </summary>
-		private string key;
+		private readonly string key;
 		/// <summary>
 		/// Stores the replacement object for the wildcard represented by this
 		/// Token in the taks prototype string.
 		/// </summary>
-		private INameable value;
+		private readonly INameable value;
 
 		/// <summary>
 		/// Stores he metadata contained in this Token, fetched from both,
 		/// taks prototype string (metadata stored in grammar) and the
 		/// metadata asociated to the Token's value.
 		/// </summary>
-		private List<string> metadata;
+		private readonly List<string> metadata;
 
 		#endregion
 
@@ -58,10 +58,9 @@ namespace RoboCup.AtHome.CommandGenerator
 			this.key = key;
 			this.value = value;
 			this.metadata = new List<string>();
-			IMetadatable imvalue = value as IMetadatable;
-			if(imvalue != null)
-				this.metadata.AddRange (imvalue.Metadata);
-			if(metadata != null)
+            if (value is IMetadatable imvalue)
+                this.metadata.AddRange(imvalue.Metadata);
+            if (metadata != null)
 				this.metadata.AddRange(metadata);
 		}
 

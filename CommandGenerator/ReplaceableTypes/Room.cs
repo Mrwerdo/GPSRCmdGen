@@ -85,7 +85,7 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 		/// <param name="name">The name of the beacon to add.</param>
 		public void AddBeacon(string name)
 		{
-			SpecificLocation b = new SpecificLocation(name, false, true);
+			SpecificLocation b = new(name, false, true);
 			this.AddLocation(b);
 		}
 
@@ -129,7 +129,7 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 		/// <param name="name">The name of the placement to add.</param>
 		public void AddPlacement(string name)
 		{
-			SpecificLocation p = new SpecificLocation(name, true, false);
+			SpecificLocation p = new(name, true, false);
 			this.AddLocation(p);
 		}
 

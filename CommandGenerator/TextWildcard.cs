@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
-	public class TextWildcard : IWildcard
+    public class TextWildcard : IWildcard
 	{
 		#region Variables
 
@@ -73,7 +71,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		public int Id
 		{
 			get { return this.id; }
-			internal set { this.id = (value < 0) ? TextWildcard.nextAutoId++ : value; }
+			internal set { this.id = (value < 0) ? nextAutoId++ : value; }
 		}
 
 		/// <summary>
@@ -153,7 +151,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				return null;
 
 			// Create Wildcard and set index
-			TextWildcard wildcard = new TextWildcard();
+			TextWildcard wildcard = new();
 			wildcard.index = cc;
 			// Read wildcard name
 			++cc;
@@ -177,7 +175,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 			// Set wildcard value
 			if (cc < s.Length) ++cc;
-			wildcard.value = s.Substring(wildcard.index, cc - wildcard.index);
+			wildcard.value = s[wildcard.index..cc];
 			return wildcard;
 		}
 
@@ -186,7 +184,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			Scanner.SkipSpaces(s, ref cc);
 			int bcc = cc;
 			while ((cc < s.Length) && Scanner.IsLAlpha(s[cc])) ++cc;
-			return s.Substring(bcc, cc - bcc);
+			return s[bcc..cc];
 		}
 
 		private static string ReadWildcardType(string s, ref int cc)
@@ -194,7 +192,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			Scanner.SkipSpaces(s, ref cc);
 			int bcc = cc;
 			while ((cc < s.Length) && Scanner.IsLAlpha(s[cc])) ++cc;
-			string type = s.Substring(bcc, cc - bcc);
+			string type = s[bcc..cc];
 			if ((type != null) && type.IsAnyOf("meta", "where"))
 			{
 				cc -= type.Length;
@@ -234,17 +232,15 @@ namespace RoboCup.AtHome.CommandGenerator
 				FindCloseBrace(s, ref cc);
 				return null;
 			}
-			int bcc = cc;
-			string metaContent = null;
-			FindCloseBrace(s, ref cc, out metaContent);
-			return metaContent;
+
+            FindCloseBrace(s, ref cc, out string metaContent);
+            return metaContent;
 		}
 
 		private static int ReadWildcardId(string s, ref int cc)
 		{
-			ushort usId;
-			Scanner.SkipSpaces(s, ref cc);
-			if (!Scanner.XtractUInt16(s, ref cc, out usId)) return -1;
+            Scanner.SkipSpaces(s, ref cc);
+            if (!Scanner.XtractUInt16(s, ref cc, out ushort usId)) return -1;
 			return usId;
 		}
 
@@ -282,7 +278,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		protected internal static bool FindCloseBrace(string s, ref int cc, out string subs)
 		{
 			int braces = 1;
-			StringBuilder sb = new StringBuilder(s.Length);
+			StringBuilder sb = new(s.Length);
 
 			while ((cc < s.Length) && (braces > 0))
 			{

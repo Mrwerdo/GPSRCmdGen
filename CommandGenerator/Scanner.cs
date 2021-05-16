@@ -37,8 +37,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		public static bool AdvanceToChar(char[] c, string input, ref int cc)
 		{
 			if ((c == null) || (c.Length < 1))
-				throw new ArgumentNullException();
-			List<char> lc = new List<char>(c);
+                throw new ArgumentNullException(nameof(c));
+			List<char> lc = new(c);
 
 			while (cc < input.Length)
 			{
@@ -242,7 +242,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			do {
 				++cc;
 			} while ((cc < input.Length) && (IsAlNum(input[cc]) || (input[cc] == '_')));
-			value = input.Substring(bcc, cc - bcc);
+			value = input[bcc..cc];
 			return true;
 		}
 
@@ -259,7 +259,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			if ((cc >= input.Length) || !ReadChar('"', input, ref cc))
 				return false;
 
-			StringBuilder sb = new StringBuilder ();
+			StringBuilder sb = new();
 			while (cc < input.Length) {
 				if (ReadChar ('"', input, ref cc))
 					break;
@@ -289,7 +289,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			if ((cc >= input.Length) || !ReadChar('\'', input, ref cc))
 				return false;
 
-			StringBuilder sb = new StringBuilder ();
+			StringBuilder sb = new();
 			while (cc < input.Length) {
 				if (ReadChar ('\'', input, ref cc))
 					break;
@@ -421,21 +421,12 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <returns>true if c is a space character; otherwise, false.</returns>
 		public static bool IsSpace(char c)
 		{
-			switch (c)
-			{
-				case ' ':
-				case '\f':
-				case '\n':
-				case '\r':
-				case '\t':
-				case '\v':
-					return true;
-
-				default:
-					return false;
-
-			}
-		}
+            return c switch
+            {
+                ' ' or '\f' or '\n' or '\r' or '\t' or '\v' => true,
+                _ => false,
+            };
+        }
 
 		/// <summary>
 		/// Indicates whether a ANSI character is upper case letter.
@@ -509,7 +500,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				return;
 
 			int i;
-			StringBuilder sb = new StringBuilder (s.Length);
+			StringBuilder sb = new(s.Length);
 			for (i = 0; i < s.Length -1; ++i) {
 				if (s [i] == '\\'){
 					++i;

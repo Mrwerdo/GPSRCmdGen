@@ -15,7 +15,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Stores the keycode of the Wildcard
 		/// </summary>
-		private string keycode;
+		private readonly string keycode;
 
 		/// <summary>
 		/// Stores the keyword associated to this wildcard
@@ -25,7 +25,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Stores the list text wildcards this Wildcard unifies
 		/// </summary>
-		private List<TextWildcard> textWildcards;
+		private readonly List<TextWildcard> textWildcards;
 
 		/// <summary>
 		/// Stores the replacement for all the unified wildcards
@@ -47,10 +47,10 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="tw">The textWildcard to be used to initialize the wildcard</param>
 		public Wildcard(TextWildcard textWildcard) {
 			if (textWildcard == null)
-				throw new ArgumentNullException ("textWildcard cannot be null.");
-			this.keycode = textWildcard.Keycode;
-			this.textWildcards = new List<TextWildcard> ();
-			this.textWildcards.Add (textWildcard);
+				throw new ArgumentNullException(nameof(textWildcard));
+			keycode = textWildcard.Keycode;
+			textWildcards = new();
+            textWildcards.Add(textWildcard);
 		}
 
 		#endregion
@@ -105,8 +105,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
 			get {
 				string tNone = String.Empty;
-				Dictionary<string, int> tCount=new Dictionary<string, int>(10);
-				tCount.Add (tNone, 0);
+                Dictionary<string, int> tCount = new(10);
+                tCount.Add(tNone, 0);
 				foreach (TextWildcard t in this.textWildcards) {
 					if (!tCount.ContainsKey (t.Type ?? tNone))
 						tCount.Add (t.Type ?? tNone, 0);
@@ -132,7 +132,7 @@ namespace RoboCup.AtHome.CommandGenerator
         /// </summary>
         public string Where{ 
             get{
-                Queue<string> clauses = new Queue<string>(this.textWildcards.Count);
+                Queue<string> clauses = new(this.textWildcards.Count);
                 foreach (TextWildcard t in this.textWildcards)
                 {
                     if (!String.IsNullOrEmpty(t.Where))
@@ -142,7 +142,7 @@ namespace RoboCup.AtHome.CommandGenerator
 					return String.Empty;
                 if (clauses.Count == 1)
                     return clauses.Dequeue();
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new();
                 // ToDo: Add parentheses support
                 // sb.AppendFormat("({0})", clauses.Dequeue());
                 sb.AppendFormat("{0}", clauses.Dequeue());
@@ -175,27 +175,15 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		/// <param name="w">The TextWildcard to add to the collection.</param>
 		public void Add(TextWildcard w){
-			if(w == null)throw new ArgumentNullException ("w cannot be null.");
-			if (w.Keycode != this.keycode)
-				throw new InvalidOperationException ("Keycode mistmatch. Added wildcards must share the same keycode");
+            if (w == null) throw new ArgumentNullException(nameof(w));
+            if (w.Keycode != keycode)
+                throw new InvalidOperationException("Keycode mistmatch. Added wildcards must share the same keycode");
 			this.textWildcards.Add (w);
 		}
 
 		public override string ToString()
 		{
-			//string s = String.Empty;
-			//if (!String.IsNullOrEmpty(this.Name))
-			//    s += "Name=" + this.Name;
-			//if (!String.IsNullOrEmpty(this.Type))
-			//    s += " Type=" + this.Type;
-			//if (this.Id != -1)
-			//    s += String.Format(" Id={0}", this.Id);
-			//if (!String.IsNullOrEmpty(this.Metadata))
-			//    s += " Metadata=" + this.Metadata;
-			//return s.TrimStart();
-			StringBuilder sb = new StringBuilder();
-			sb.AppendFormat ("{0} ({1})", this.keycode, textWildcards.Count);
-			return sb.ToString();
+			return $"{keycode} ({textWildcards.Count})";
 		}
 
 		/// <summary>

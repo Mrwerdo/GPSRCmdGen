@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 using Object = RoboCup.AtHome.CommandGenerator.ReplaceableTypes.Object;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
-	/// <summary>
-	/// Converts between grammar formats
-	/// </summary>
-	public class GrammarConverter
+    /// <summary>
+    /// Converts between grammar formats
+    /// </summary>
+    public class GrammarConverter
 	{
 		private Grammar grammar;
 		protected XmlWriter writer;
 		private List<Gesture> gestures;
-		private LocationManager locations;
+		private readonly LocationManager locations;
 		private List<PersonName> names;
-		private ObjectManager objects;
+		private readonly ObjectManager objects;
 		private List<PredefinedQuestion> questions;
 		//private static 
 
@@ -41,11 +39,10 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="questions">List of known questions</param>
 		public GrammarConverter(Grammar grammar, List<Gesture> gestures, List<PersonName> names, List<PredefinedQuestion> questions) : this()
 		{
-			if (grammar == null) throw new ArgumentNullException();
-			this.grammar = grammar;
-			this.gestures = (gestures != null)? gestures : new List<Gesture>();
-			this.names = (names != null)?names  : new List<PersonName>();
-			this.questions = (questions != null) ? questions : new List<PredefinedQuestion>();
+            this.grammar = grammar ?? throw new ArgumentNullException(nameof(grammar));
+			this.gestures = gestures ?? new List<Gesture>();
+			this.names = names ?? new List<PersonName>();
+			this.questions = questions ?? new List<PredefinedQuestion>();
 		}
 
 		/// <summary>
@@ -59,14 +56,16 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="questions">List of known questions</param>
 		public static void SaveToSRGS(Grammar grammar, string filePath, List<Gesture> gestures, List<PersonName> names, List<PredefinedQuestion> questions)
 		{
-			if (grammar == null) throw new ArgumentNullException();
-			GrammarConverter converter = new GrammarConverter();
-			converter.grammar = grammar;
-			converter.gestures = gestures;
-			converter.names = names;
-			converter.questions = questions;
+			if (grammar == null) throw new ArgumentNullException(nameof(grammar));
+            GrammarConverter converter = new()
+            {
+                grammar = grammar,
+                gestures = gestures,
+                names = names,
+                questions = questions
+            };
 
-			converter.ConvertToXmlSRGS(filePath);
+            converter.ConvertToXmlSRGS(filePath);
 		}
 
 		/// <summary>
@@ -74,7 +73,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		public void ConvertToXmlSRGS(TextWriter writer)
 		{
-			XmlWriterSettings settings = new XmlWriterSettings();
+			XmlWriterSettings settings = new();
 			settings.Indent = true;
 			settings.IndentChars = "\t";
 			using (this.writer = XmlTextWriter.Create(writer, settings))
@@ -106,12 +105,10 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="filePath">The name of the file in which the converted grammar will be stored</param>
 		public void ConvertToAbnfSRGS(string filePath)
 		{
-			using (StreamWriter stream = new StreamWriter(filePath))
-			{
-				ConvertToAbnfSRGS(stream);
-				stream.Close();
-			}
-		}
+            using StreamWriter stream = new(filePath);
+            ConvertToAbnfSRGS(stream);
+            stream.Close();
+        }
 
 		/// <summary>
 		/// Converts the grammar to Xml SRGS specification, saving it into the specified file
@@ -119,12 +116,10 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="filePath">The name of the file in which the converted grammar will be stored</param>
 		public void ConvertToXmlSRGS(string filePath)
 		{
-			using (StreamWriter stream = new StreamWriter(filePath))
-			{
-				ConvertToXmlSRGS(stream);
-				stream.Close();
-			}
-		}
+            using StreamWriter stream = new(filePath);
+            ConvertToXmlSRGS(stream);
+            stream.Close();
+        }
 
 		protected virtual void SRGSWriteHeader()
 		{
@@ -140,7 +135,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		}
 
-		private string ComputeKeyword(TextWildcard w)
+		private static string ComputeKeyword(TextWildcard w)
 		{
 			if (w.Type == null)
 				return w.Name;
@@ -206,9 +201,9 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteEndElement();
 		}
 
-		private List<string> GetValidReplacements(ProductionRule productionRule)
+		private static List<string> GetValidReplacements(ProductionRule productionRule)
 		{
-			List<string> vr = new List<string>(productionRule.Replacements.Count);
+			List<string> vr = new(productionRule.Replacements.Count);
 
 			for (int i = 0; i < productionRule.Replacements.Count; ++i){
 				string replacement = (productionRule.Replacements[i] ?? String.Empty).Trim();
@@ -221,7 +216,7 @@ namespace RoboCup.AtHome.CommandGenerator
 					TextWildcard w = TextWildcard.XtractWildcard(replacement, ref cc);
 					if (w.Name != "void")
 						continue;
-					replacement = replacement.Remove(bcc) + replacement.Substring(cc);
+					replacement = replacement.Remove(bcc) + replacement[cc..];
 					cc = bcc;
 				}
 
@@ -365,7 +360,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			SRGSWriteRuleRef(uri);
 		}
 
-		private string FetchNonTerminal(string s, ref int cc)
+		private static string FetchNonTerminal(string s, ref int cc)
 		{
 			char c;
 			int bcc = cc++;
@@ -377,11 +372,11 @@ namespace RoboCup.AtHome.CommandGenerator
 				else
 					break;
 			}
-			return s.Substring(bcc, cc - bcc);
+			return s[bcc..cc];
 		}
 
-		private string SRGSNonTerminalToRuleName(string nonTerminal){
-			return nonTerminal.Substring(1,1).ToLower() + (nonTerminal.Length > 2 ? nonTerminal.Substring(2) : String.Empty);
+		private static string SRGSNonTerminalToRuleName(string nonTerminal){
+			return nonTerminal.Substring(1,1).ToLower() + (nonTerminal.Length > 2 ? nonTerminal[2..] : String.Empty);
 		}
 
 		private void SRGSWriteGesturesRules()
@@ -435,7 +430,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteAttributeString("id", "_beacons");
 			writer.WriteAttributeString("scope", "private");
 			writer.WriteStartElement("one-of");
-			HashSet<string> hsLocations = new HashSet<string>();
+			HashSet<string> hsLocations = new();
 			foreach (Location loc in locations)
 			{
 				if (loc.IsBeacon && !hsLocations.Contains(loc.Name))
@@ -451,7 +446,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteAttributeString("id", "_placements");
 			writer.WriteAttributeString("scope", "private");
 			writer.WriteStartElement("one-of");
-			HashSet<string> hsLocations = new HashSet<string>();
+			HashSet<string> hsLocations = new();
 			foreach (Location loc in locations)
 			{
 				if (loc.IsPlacement && !hsLocations.Contains(loc.Name))
@@ -481,7 +476,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				SRGSWriteItem(room.Name);
 			}
 
-			HashSet<string> hsRooms = new HashSet<string>();
+			HashSet<string> hsRooms = new();
 			foreach (Room room in locations.Rooms)
 			{
 				if (!hsRooms.Contains(room.Name))

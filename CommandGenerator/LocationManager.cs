@@ -11,7 +11,7 @@ namespace RoboCup.AtHome.CommandGenerator
 {
 	public class LocationManager : IEnumerable<Location> //, ICollection<Room>, ICollection<SpecificLocation>, 
 	{
-		private Dictionary<string, Room> rooms;
+		private readonly Dictionary<string, Room> rooms;
 
 		private LocationManager()
 		{
@@ -83,7 +83,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		public override string ToString()
 		{
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new();
 			foreach (Room r in this.rooms.Values)
 			{
 				sb.Append(r.Name);
@@ -101,7 +101,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		IEnumerator<Location> System.Collections.Generic.IEnumerable<Location>.GetEnumerator()
 		{
-			List<Location> l = new List<Location>(100);
+			List<Location> l = new(100);
 			foreach (Room r in this.rooms.Values)
 			{
 				l.Add(r);
@@ -140,7 +140,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		#region Singleton
 
-		private static LocationManager instance;
+		private static readonly LocationManager instance;
 		static LocationManager() { instance = new LocationManager(); }
 
 		public static LocationManager Instance { get { return instance; } }
