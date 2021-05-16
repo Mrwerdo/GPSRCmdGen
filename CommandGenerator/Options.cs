@@ -1,3 +1,4 @@
+using System;
 using CommandLine;
 
 namespace RoboCup.AtHome.CommandGenerator
@@ -11,5 +12,18 @@ namespace RoboCup.AtHome.CommandGenerator
 
         [Option('v', "verbose", Default = true)]
         public bool Verbose { get; set; }
+        
+        [Option('s', "seed", Default = 0)]
+        public int SeedOption { get; set; }
+
+        public int Seed {
+            get {
+                if (SeedOption == 0) {
+                    return DateTime.Now.Millisecond;
+                } else {
+                    return SeedOption;
+                }
+            }
+        }
     }
 }

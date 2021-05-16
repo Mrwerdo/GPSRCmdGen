@@ -28,7 +28,7 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 		/// <summary>
 		/// Initializes a new instance of EGPSRGenerator
 		/// </summary>
-		public EGPSRGenerator() : base() {}
+		public EGPSRGenerator(int seed) : base(seed) {}
 
 		#endregion
 

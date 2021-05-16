@@ -54,10 +54,10 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Initializes a new instance of Generator
 		/// </summary>
-		public Generator ()
+		public Generator (int seed)
 		{
-			// Initialize all objects
-			this.rnd = new Random (DateTime.Now.Millisecond);
+            // Initialize all objects
+            this.rnd = new Random(seed);
 			this.allGestures = new List<Gesture> ();
 			this.allLocations = LocationManager.Instance;
 			this.allNames = new List<PersonName> ();

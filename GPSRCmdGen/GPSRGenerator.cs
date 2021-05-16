@@ -22,7 +22,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
 		/// <summary>
 		/// Initializes a new instance of GPSRGenerator
 		/// </summary>
-		public GPSRGenerator() : base() {}
+		public GPSRGenerator(int seed) : base(seed) {}
 
 		#endregion
 

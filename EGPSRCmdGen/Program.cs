@@ -31,7 +31,7 @@ namespace RoboCup.AtHome.EGPSRCmdGen
 			Parser.Default.ParseArguments<Options>(args)
             .WithParsed(options =>
             {
-                var program = new BaseProgram(new EGPSRGenerator(), options)
+                var program = new BaseProgram(new EGPSRGenerator(options.Seed), options)
 				{
 					Name = "EGPSRCmdGen",
 					LongName = "Enhanced GPSR Command Generator 2021 modified by NUbots"
