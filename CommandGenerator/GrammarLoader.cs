@@ -42,11 +42,15 @@ namespace RoboCup.AtHome.CommandGenerator
             /// if the grammar could not be loadder.</returns>
             public Grammar Load(string filePath, bool requireMainNT = true)
 			{
+				return LoadText(File.ReadAllLines(filePath), filePath, requireMainNT);
+			}
+
+			public Grammar LoadText(string[] lines, string filePath, bool requireMainNT = true)
+			{
 				grammarFilepath = filePath;
 				grammar = new Grammar ();
-				lines = new List<string>(File.ReadAllLines (filePath));
+                this.lines = new List<string>(lines);
 				StripCommentsAndEmptyLines ();
-
 				ParseProductionRules ();
 				if (requireMainNT && !grammar.ContainsRule ("$Main"))
 					return null;
@@ -190,7 +194,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				}
 
 				m = rxGrammarImportXtractor.Match (line);
-				if (m.Success) {
+				if (m.Success && grammarFilepath != null) {
 					string path = Path.Combine (Path.GetDirectoryName (grammarFilepath), m.Result ("${path}"));
 					if (path != grammarFilepath)
 						ImportGrammar (m.Result ("${directive}"), path, m.Result ("${nt}"));

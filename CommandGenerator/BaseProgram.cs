@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using RoboCup.AtHome.CommandGenerator.Containers;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 
@@ -108,6 +109,20 @@ namespace RoboCup.AtHome.CommandGenerator
         {
             var grammar = new Grammar();
             var loader = new Grammar.GrammarLoader();
+            if (!Options.Files.Any())
+            {
+                var g = loader.LoadText(Resources.CommonRules.Split('\n'), null, false);
+				foreach (var rule in g.ProductionRules) 
+				{
+					grammar.AddRule(rule);
+				}
+                g = loader.LoadText(Resources.GPSRGrammar.Split('\n'), null, false);
+				foreach (var rule in g.ProductionRules) 
+				{
+					grammar.AddRule(rule);
+				}
+				grammar.Tier = g.Tier;
+			}
             foreach (var file in Options.Files)
             {
                 var g = loader.Load(file, false);
