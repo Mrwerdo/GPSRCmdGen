@@ -18,7 +18,7 @@ The solution includes generators for the following tasks:
 
 ## Minimum System Requirements
 
-You need [Microsoft .NET Core 3.1][dotnet-core] or above.
+You need [Microsoft .NET Core 5.0][dotnet-core] or above.
 
 Although the code itself is compatible with the specification of the .NET Framework 2.0, the included solution files target a later build for compatibility.
 
@@ -32,9 +32,14 @@ First clone the repository (you will need git installed)
 The building procedure ***should not*** depend on operating system.
 
     dotnet run --project GPSRCmdGen/GPSRCmdGen.csproj
-    dotnet run --projcet EGPSRCmdGen/EGPSRCmdGen.csproj
+    # or dotnet run -p GPSRCmdGen
 
 Or if the `.csproj` file is in your current directory, you may simply `dotnet run`.
+
+## Testing
+Tests are located under `CommandGenerator.Tests`. They are ran by:
+
+    dotnet test
 
 ## Reuse in other competitions and projects
 Thanks to the MIT license, you can adapt this project to your own needs (acknowledgments are always appreciated). Feel free to use this generator.
