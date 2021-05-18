@@ -4,8 +4,10 @@ using System.Text;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
-    public class TextWildcard : IWildcard
+    public class TextWildcard
 	{
+        public WeakReference<Wildcard> Parent;
+
 		#region Variables
 
 		/// <summary>
@@ -59,6 +61,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		private TextWildcard() { 
 			Children = new List<TextWildcard>();
+			Parent = new WeakReference<Wildcard>(null);
 		}
 
 		#endregion
@@ -72,40 +75,30 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		public string Keycode
 		{
-			get{ return Name + this.id.ToString().PadLeft(4, '0'); }
+			get{ return Name + id.ToString().PadLeft(4, '0'); }
 		}
 
-		/// <summary>
-		/// Gets the Wildcard id
-		/// </summary>
-		public int Id
-		{
-			get { return this.id; }
-			internal set { this.id = (value < 0) ? nextAutoId++ : value; }
+		public void SetId(int value) {
+            id = (value < 0) ? nextAutoId++ : value;
 		}
 
-		/// <summary>
-		/// Gets the name of the wildcard
-		/// </summary>
-		public string Name
-		{
-			get { return this.name; }
-			protected set{ this.name = String.IsNullOrEmpty (value) ? null : value.ToLower (); }
-		}
+        /// <summary>
+        /// Gets the name of the wildcard
+        /// </summary>
+        public string Name
+        {
+            get { return name; }
+            protected set { name = string.IsNullOrEmpty(value) ? null : value.ToLower(); }
+        }
 
-		/// <summary>
-		/// Gets a value indicating if the wildcard is valid
-		/// </summary>
-		public bool Success { get { return !String.IsNullOrEmpty(this.Name); } }
-
-		/// <summary>
-		/// Gets the type of the wildcard
-		/// </summary>
-		public string Type
-		{
-			get { return this.type; }
-			protected set{ this.type = String.IsNullOrEmpty (value) ? null : value.ToLower (); }
-		}
+        /// <summary>
+        /// Gets the type of the wildcard
+        /// </summary>
+        public string Type
+        {
+            get { return type; }
+            protected set { type = string.IsNullOrEmpty(value) ? null : value.ToLower(); }
+        }
 
 		#endregion
 
@@ -170,7 +163,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			wildcard.Type = ReadWildcardType(s, ref cc);
 
 			// Read wildcard id
-			wildcard.Id = ReadWildcardId(s, ref cc);
+			wildcard.SetId(ReadWildcardId(s, ref cc));
 
 			// Read wildcard where clauses (query)
             wildcard.Where = ReadWhereClauses(s, ref cc);

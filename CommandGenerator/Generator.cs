@@ -64,7 +64,7 @@ namespace RoboCup.AtHome.CommandGenerator
         /// </summary>
         /// <param name="tier">The maximum difficulty degree allowed to produce the task</param>
         /// <returns></returns>
-        public Task GenerateTask()
+        public TaskNode GenerateTask()
 		{
             TaskNode root = Grammar.GenerateSentence(Rnd);
             var evaluator = new WildcardEvaluator() 
@@ -78,12 +78,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				Questions = AllQuestions.ShuffleCopy(Rnd)
 			};
             evaluator.Update(root.Wildcards);
-            var t = new Task
-            {
-                Tree = root,
-				Tokens = root.AsTokens()
-            };
-            return t;
+            return root;
         }
 
         #region Load Methods

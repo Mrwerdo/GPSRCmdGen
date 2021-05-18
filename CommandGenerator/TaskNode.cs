@@ -85,13 +85,49 @@ namespace RoboCup.AtHome.CommandGenerator
 		}
 		
 		public string Render() {
+			string s = RenderPrivate();
+			while(s.Contains("  "))
+				s = s.Replace ("  ", " ");
+			s = s.Replace (" ,", ",");
+			s = s.Replace (" ;", ";");
+			s = s.Replace (" .", ".");
+			s = s.Replace (" :", ":");
+			s = s.Replace (" ?", "?");
+			return s;
+		}
+
+		private string RenderPrivate() {
 			string output = "";
 			if (IsNonTerminal) {
-                output += string.Join(" ", Children.ConvertAll(t => t.Render()));
-			} else {
+                output += string.Join(" ", Children.ConvertAll(t => t.RenderPrivate()));
+			} else if (TextWildcard != null) {
+                if (TextWildcard.Parent.TryGetTarget(out Wildcard w))
+                {
+					if (TextWildcard.Obfuscated && w.Obfuscated != null) {
+						output += w.Obfuscated.Name;
+					} else {
+						output += w.Replacement.Name;
+					}
+                }
+            } else {
 				output += Value;
 			}
 			return output;
+		}
+
+		public List<string> Comments() {
+			var l = new List<string>();
+			if (TextWildcard != null) {
+				if (TextWildcard.Parent.TryGetTarget(out Wildcard wildcard)) {
+					if (wildcard.Obfuscated != null) {
+                        l.Add(wildcard.Replacement.Name);
+					}
+				}
+			}
+			foreach (var child in Children) {
+				l.AddRange(child.Comments());
+			}
+			return l;
 		}
 
 		public string PrettyTree(int indent = 0) {
@@ -112,23 +148,6 @@ namespace RoboCup.AtHome.CommandGenerator
 			return output;
 		}
 
-		public List<Token> AsTokens() {
-			var tokens = new List<Token>();
-			if (IsNonTerminal && TextWildcard != null) {
-				var obfuscated = TextWildcard.Obfuscated ? "?" : "";
-				var nte = new NamedTaskElement($"{{{TextWildcard.Keycode}{obfuscated}}}");
-				var token = new Token(Value, nte, null);
-				tokens.Add(token);
-			} else if (!IsNonTerminal) {
-				var token = new Token(Value, null, null);
-				tokens.Add(token);
-			}
-			foreach (var child in Children) {
-				tokens.AddRange(child.AsTokens());
-            }
-			return tokens;
-		}
-
 		public List<TextWildcard> Wildcards {
 			get {
 				var l = new List<TextWildcard>();
@@ -139,6 +158,78 @@ namespace RoboCup.AtHome.CommandGenerator
 					l.AddRange(child.Wildcards);
 				}
 				return l;
+			}
+		}
+
+		public void Print() 
+		{
+			string sTask = Render();
+			if (sTask.Length < 1)
+				return;
+
+			// switch Console color to white, backuping the previous one
+			ConsoleColor pc = Console.ForegroundColor;
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.WriteLine();
+			// Prints a === line
+			string pad = string.Empty.PadRight(Console.BufferWidth - 1, '=');
+			Console.WriteLine(pad);
+			Console.WriteLine();
+
+			// Prints task string and metadata
+			sTask = sTask[0..1].ToUpper() + sTask[1..];
+			do
+			{
+				int cut = sTask.Length;
+				if (cut >= Console.BufferWidth)
+					cut = sTask.LastIndexOf(' ', Console.BufferWidth-1);
+				Console.WriteLine(sTask.Substring(0, cut));
+				sTask = sTask[cut..].Trim();
+			} while (!string.IsNullOrEmpty(sTask));
+            Console.WriteLine(PrintTaskMetadata());
+			Console.WriteLine();
+			// Prints another line
+			Console.WriteLine(pad);
+			// Restores Console color
+			Console.ForegroundColor = pc;
+			Console.WriteLine();
+		}
+
+		public string PrintTaskMetadata(bool extra = true)
+		{
+			var output = "";
+			EnumerateTree(t => {
+				output += t.PrintMetadata();
+			});
+			if (extra) {
+				output += "\nParse tree:\n";
+				output += PrettyTree() + "\n";
+				output += "Command:\n";
+				output += this.RenderCommand() + "\n";
+			}
+			return output + "\n";
+		}
+
+		private string PrintMetadata() {
+			var output = "";
+            if (TextWildcard != null && TextWildcard.Parent.TryGetTarget(out Wildcard wildcard))
+            {
+				if (!string.IsNullOrEmpty(TextWildcard.Metadata)) {
+					if (string.IsNullOrEmpty(wildcard.Replacement.Name)) {
+						output += "Remarks\n";
+					} else {
+						output += wildcard.Replacement.Name + "\n";
+					}
+					output += "\t" + TextWildcard.Metadata + "\n";
+				}
+			} 
+			return output;
+		}
+
+		public void EnumerateTree(Action<TaskNode> callback) {
+			callback(this);
+			foreach (var child in Children) {
+				child.EnumerateTree(callback);
 			}
 		}
     }

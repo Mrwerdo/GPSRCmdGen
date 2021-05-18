@@ -48,6 +48,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
             var wildcardMap = wildcards.GroupBy(t => t.Keycode).ToDictionary(t => t.Key, e => new Wildcard(e.ToList()));
 			foreach (var pair in wildcardMap) {
+				if (pair.Value.Replacement != null) continue;
 				FindReplacement(pair.Value);
 			}
 		}
@@ -135,8 +136,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="w">The wilcard to find a replacement for</param>
 		public void EvaluateCategory(Wildcard w)
 		{
-			if (w.Replacement != null)
-				return;
 			w.Replacement = !String.IsNullOrEmpty(w.Where) ? Categories.PopFirst(w.Where) : Categories.PopLast();
 			w.Obfuscated = new Obfuscator("objects");
 		}
@@ -147,8 +146,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="w">The wilcard to find a replacement for</param>
 		public void EvaluateGesture(Wildcard w)
 		{
-			if (w.Replacement != null)
-				return;
 			w.Replacement = !String.IsNullOrEmpty(w.Where) ? Gestures.PopFirst(w.Where) : Gestures.PopLast();
 		}
 
@@ -158,7 +155,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="w">The wilcard to find a replacement for</param>
 		public void EvaluateLocation(Wildcard w)
 		{
-			if(w.Replacement != null) return;
 			if ((w.Name == "location") && String.IsNullOrEmpty(w.Where))
 				w.Keyword = w.Type ?? Random.RandomPick("beacon", "room", "placement");
 			switch (w.Keyword)
@@ -191,12 +187,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="w">The wilcard to find a replacement for</param>
 		public void EvaluateName(Wildcard w)
 		{
-			if(w.Replacement != null) return;
 			if ((w.Name == "name") && String.IsNullOrEmpty(w.Where))
 				w.Keyword = w.Type ?? Random.RandomPick ("male", "female");
-
-
-
             w.Replacement = w.Keyword switch
             {
                 "male" => Names.PopFirst(n => n.Gender == Gender.Male, w.Where),
@@ -212,8 +204,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="w">The wilcard to find a replacement for</param>
 		public void EvaluateObject(Wildcard w)
 		{
-			if(w.Replacement != null) return;
-
 			if ((w.Name == "object") && String.IsNullOrEmpty(w.Where))
 				w.Keyword = (w.Type == null) ? Random.RandomPick ("kobject", "aobject") : String.Format("{0}object", w.Type[0]);
 
@@ -233,7 +223,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="w">The wilcard to find a replacement for</param>
 		public void EvaluateQuestion(Wildcard w)
 		{
-			if(w.Replacement != null) return;
 			w.Replacement = !String.IsNullOrEmpty(w.Where) ? Questions.PopFirst(w.Where) : Questions.PopLast ();
 			w.Obfuscated = new Obfuscator("question");
 		}

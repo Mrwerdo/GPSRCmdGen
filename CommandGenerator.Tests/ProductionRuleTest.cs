@@ -97,7 +97,7 @@ namespace RoboCup.AtHome.CommandGenerator.Tests
         [Fact]
         public void SplitParenthesis()
         {
-            var result = Scanner.SplitRespectingParenthesis("a | (b | c) d | e");
+            var result = Scanner.SplitRespectingParenthesis("a | (b | c) d | e", '(', ')', '|');
             Assert.Equal(new string[] { "a ", " (b | c) d ", " e" }, result);
         }
     }

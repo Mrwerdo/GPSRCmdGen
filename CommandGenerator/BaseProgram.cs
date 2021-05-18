@@ -88,7 +88,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		}
 
 
-		private Task GetTask() {
+		private TaskNode GetTask() {
 			try
 			{
                 return generator.GenerateTask();
@@ -166,9 +166,9 @@ namespace RoboCup.AtHome.CommandGenerator
 			using var writer = GetOutputStream();
             for (int i = 1; i <= Options.Bulk; ++i)
             {
-                Task task = generator.GenerateTask();
+                TaskNode task = generator.GenerateTask();
                 if (task == null) continue;
-                string sTask = task.ToString().Trim();
+                string sTask = task.Render();
                 if (sTask.Length < 1) continue;
                 sTask = sTask.Capitalize();
 
@@ -176,7 +176,7 @@ namespace RoboCup.AtHome.CommandGenerator
             }
         }
 
-		private static void WriteTaskToFile(TextWriter writer, Task task, string sTask, int i)
+		private static void WriteTaskToFile(TextWriter writer, TaskNode task, string sTask, int i)
 		{
 			string pad = String.Empty.PadRight(79, '#');
 			writer.WriteLine(pad);
@@ -187,27 +187,28 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteLine();
 			writer.WriteLine(sTask);
 			writer.WriteLine();
-			List<string> remarks = new();
-			foreach (Token token in task.Tokens)
-			{
-				if (token.Metadata.Count < 1)
-					continue;
-				if (String.IsNullOrEmpty(token.Name))
-					remarks.AddRange(token.Metadata);
-				else
-				{
-					writer.WriteLine("{0}", token.Name);
-					foreach (string md in token.Metadata)
-						writer.WriteLine("\t{0}", md);
-				}
-			}
-			if (remarks.Count > 0)
-			{
-				writer.WriteLine("Remarks");
-				foreach (string r in remarks)
-					writer.WriteLine("\t{0}", r);
-			}
-			writer.WriteLine();
+			writer.Write(task.PrintTaskMetadata(false));
+			// List<string> remarks = new();
+			// foreach (Token token in task.Tokens)
+			// {
+			// 	if (token.Metadata.Count < 1)
+			// 		continue;
+			// 	if (String.IsNullOrEmpty(token.Name))
+			// 		remarks.AddRange(token.Metadata);
+			// 	else
+			// 	{
+			// 		writer.WriteLine("{0}", token.Name);
+			// 		foreach (string md in token.Metadata)
+			// 			writer.WriteLine("\t{0}", md);
+			// 	}
+			// }
+			// if (remarks.Count > 0)
+			// {
+			// 	writer.WriteLine("Remarks");
+			// 	foreach (string r in remarks)
+			// 		writer.WriteLine("\t{0}", r);
+			// }
+			// writer.WriteLine();
 		}
 
 	}
