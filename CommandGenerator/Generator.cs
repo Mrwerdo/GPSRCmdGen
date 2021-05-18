@@ -67,12 +67,22 @@ namespace RoboCup.AtHome.CommandGenerator
         public Task GenerateTask()
 		{
             TaskNode root = Grammar.GenerateSentence(Rnd);
-            string taskPrototype = root.Render();
-            WildcardReplacer replacer = new(this, Grammar.Tier);
-            if (string.IsNullOrEmpty(taskPrototype))
-                return null;
-            Task t = replacer.GetTask(taskPrototype);
-            t.Tree = root;
+            var evaluator = new WildcardEvaluator() 
+			{
+                Random = Rnd,
+                Categories = AllObjects.Categories.ShuffleCopy(Rnd),
+				Gestures = AllGestures.ShuffleCopy(Rnd),
+				Locations = new List<Location>(AllLocations).ShuffleCopy(Rnd),
+				Names = AllNames.ShuffleCopy(Rnd),
+				Objects = AllObjects.Objects.ShuffleCopy(Rnd),
+				Questions = AllQuestions.ShuffleCopy(Rnd)
+			};
+            evaluator.Update(root.Wildcards);
+            var t = new Task
+            {
+                Tree = root,
+				Tokens = root.AsTokens()
+            };
             return t;
         }
 

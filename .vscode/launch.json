@@ -8,9 +8,9 @@
             "preLaunchTask": "build-gpsr",
             "program": "${workspaceFolder}/GPSRCmdGen/bin/Debug/net5.0/GPSRCmdGen.dll",
             "args": [
-                "--seed", "20",
+                "--seed", "21",
                 "../CommonFiles/CommonRules.txt",
-                "../CommonFiles/GPSRGrammar.txt"
+                "../CommonFiles/EGPSRGrammar.txt"
             ],
             "cwd": "${workspaceFolder}/GPSRCmdGen",
             "stopAtEntry": false,

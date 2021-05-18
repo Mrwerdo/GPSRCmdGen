@@ -53,6 +53,11 @@ namespace RoboCup.AtHome.CommandGenerator
             textWildcards.Add(textWildcard);
 		}
 
+		public Wildcard(List<TextWildcard> wildcards) {
+			keycode = wildcards.First().Keycode;
+			textWildcards = wildcards;
+		}
+
 		#endregion
 
 		#region Properties
@@ -155,16 +160,6 @@ namespace RoboCup.AtHome.CommandGenerator
                 return sb.ToString();
             }
         }
-
-		#endregion
-
-		#region Indexers
-
-		/// <summary>
-		/// Gets the <see cref="RoboCup.AtHome.CommandGenerator.Wildcard"/> at the specified index.
-		/// </summary>
-		/// <param name="index">Index.</param>
-		public TextWildcard this[int index] { get{ return this.textWildcards [index];} }
 
 		#endregion
 

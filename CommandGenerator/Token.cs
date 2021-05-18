@@ -10,24 +10,33 @@ namespace RoboCup.AtHome.CommandGenerator
 	/// </summary>
 	public class Token : IMetadatable
 	{
-		#region Variables
-
-		/// <summary>
-		/// Stores the original substring in the taks prototype string.
-		/// </summary>
-		private readonly string key;
-		/// <summary>
-		/// Stores the replacement object for the wildcard represented by this
-		/// Token in the taks prototype string.
-		/// </summary>
-		private readonly INameable value;
-
+        #region Properties
 		/// <summary>
 		/// Stores he metadata contained in this Token, fetched from both,
 		/// taks prototype string (metadata stored in grammar) and the
 		/// metadata asociated to the Token's value.
 		/// </summary>
-		private readonly List<string> metadata;
+		public List<string> Metadata { get; set; }
+
+
+        /// <summary>
+        /// Gets the original substring in the taks prototype string.
+        /// </summary>
+        public string Key { get; set; }
+
+		/// <summary>
+		/// Gets the replacement object for the wildcard represented by this
+		/// Token in the taks prototype string, if the token is a wildcard.
+		/// If the Token is a literal string, it returns null.
+		/// </summary>
+		public INameable Value { get; set; } 
+
+		/// <summary>
+		/// Gets the INameable.Name. of the Token.
+		/// When Value property is not null, it returns the name of the Toklen's value.
+		/// When Value property is null, it returns the Token's key, 
+		/// </summary>
+		public string Name { get { return Value == null ? Key : Value.Name; } }
 
 		#endregion
 
@@ -44,71 +53,20 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		/// <param name="key">The original substring in the taks prototype string.</param>
 		/// <param name="value">The replacement object for the wildcard represented by this Token.</param>
-		public Token (string key, INameable value) : this(key, value, null){}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="RoboCup.AtHome.CommandGenerator.Token"/> class.
-		/// </summary>
-		/// <param name="key">The original substring in the taks prototype string.</param>
-		/// <param name="value">The replacement object for the wildcard represented by this Token.</param>
 		/// <param name="metadata">Additional metadata to add (e.g. from the grammar
 		/// or the taks prototype string).</param>
 		public Token (string key, INameable value, IEnumerable<string> metadata)
 		{
-			this.key = key;
-			this.value = value;
-			this.metadata = new List<string>();
+			Key = key;
+			Value = value;
+			this.Metadata = new List<string>();
             if (value is IMetadatable imvalue)
-                this.metadata.AddRange(imvalue.Metadata);
+                this.Metadata.AddRange(imvalue.Metadata);
             if (metadata != null)
-				this.metadata.AddRange(metadata);
+				this.Metadata.AddRange(metadata);
 		}
 
-		#endregion
-
-		#region Properties
-
-		/// <summary>
-		/// Gets the original substring in the taks prototype string.
-		/// </summary>
-		public string Key { get { return this.key; } }
-
-		/// <summary>
-		/// Gets the replacement object for the wildcard represented by this
-		/// Token in the taks prototype string, if the token is a wildcard.
-		/// If the Token is a literal string, it returns null.
-		/// </summary>
-		public INameable Value { get { return value; } }
-
-		/// <summary>
-		/// Gets a value indicating if the Token is a wildcard
-		/// </summary>
-		public bool IsWildcard{ get { return this.value != null; } }
-
-		/// <summary>
-		/// Gets the INameable.Name. of the Token.
-		/// When Value property is not null, it returns the name of the Toklen's value.
-		/// When Value property is null, it returns the Token's key, 
-		/// </summary>
-		public string Name { get { return value == null ? this.key : this.value.Name; } }
-
-		/// <summary>
-		/// Gets the metadata contained in this Token, fetched from both,
-		/// taks prototype string (metadata stored in grammar) and the
-		/// metadata asociated to the Token's value.
-		/// </summary>
-		/// <value>The metadata.</value>
-		public List<string> Metadata { get { return this.metadata; } }
-
-		/// <summary>
-		/// Gets the metadata contained in this Token, fetched from both,
-		/// taks prototype string (metadata stored in grammar) and the
-		/// metadata asociated to the Token's value.
-		/// </summary>
-		/// <value>The metadata.</value>
-		string[] IMetadatable.Metadata { get { return this.metadata.ToArray(); } }
-
-		#endregion
+        #endregion
 
 		#region Methods
 
@@ -118,9 +76,11 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <returns>A <see cref="System.String"/> that represents the current <see cref="RoboCup.AtHome.CommandGenerator.Token"/>.</returns>
 		public override string ToString()
 		{
-			if(value == null)
-				return this.key;
-			return String.Format ("{0} => {1}", this.key, this.value.Name);
+            return Value == null ? Key : $"{Key} => {Value.Name}";
+		}
+
+		public string[] GetMetadata() {
+			return Metadata.ToArray();
 		}
 
 		#endregion

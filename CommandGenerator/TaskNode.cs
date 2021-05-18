@@ -33,26 +33,39 @@ namespace RoboCup.AtHome.CommandGenerator
 		}
 		public WeakReference<TaskNode> Parent { get; private set; }
 		/// <summary>
-		/// If null then this is a terminal node.
+		/// If empty then this is a terminal node.
 		/// </summary>
 		public List<TaskNode> Children { get; private set; }
 
 		public string Value { get; set; }
 		public bool IsNonTerminal { get; set; }
-		public ProductionRuleAttributes Attributes { get; set; }
+		public ProductionRuleAttributes Attributes 
+		{ 
+			get {
+				if (Rule == null) { return null; }
+				return Rule.Attributes;
+			}
+		}
         public ProductionRule.Replacement Replacement { get; set; }
 		public ProductionRule Rule 
 		{
 			get {
+				if (Replacement == null) return null;
 				return Replacement.Rule;
 			}
 		}
+        public TextWildcard TextWildcard { get; set; }
 
 		public TaskNode(string value, bool isNonTerminal) {
 			Value = value;
 			IsNonTerminal = isNonTerminal;
 			Parent = new WeakReference<TaskNode>(null);
 			Children = new List<TaskNode>();
+
+			if (!IsNonTerminal) {
+				int cc = 0;
+                TextWildcard = TextWildcard.XtractWildcard(Value, ref cc);
+			}
 		}
 
         public bool IsLiteral
@@ -99,5 +112,34 @@ namespace RoboCup.AtHome.CommandGenerator
 			return output;
 		}
 
+		public List<Token> AsTokens() {
+			var tokens = new List<Token>();
+			if (IsNonTerminal && TextWildcard != null) {
+				var obfuscated = TextWildcard.Obfuscated ? "?" : "";
+				var nte = new NamedTaskElement($"{{{TextWildcard.Keycode}{obfuscated}}}");
+				var token = new Token(Value, nte, null);
+				tokens.Add(token);
+			} else if (!IsNonTerminal) {
+				var token = new Token(Value, null, null);
+				tokens.Add(token);
+			}
+			foreach (var child in Children) {
+				tokens.AddRange(child.AsTokens());
+            }
+			return tokens;
+		}
+
+		public List<TextWildcard> Wildcards {
+			get {
+				var l = new List<TextWildcard>();
+				if (TextWildcard != null) {
+					l.AddRange(TextWildcard.ToList());
+				}
+				foreach (var child in Children) {
+					l.AddRange(child.Wildcards);
+				}
+				return l;
+			}
+		}
     }
 }

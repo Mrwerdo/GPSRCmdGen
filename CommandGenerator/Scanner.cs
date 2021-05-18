@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -476,42 +478,19 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="s">string to look inside</param>
 		/// <param name="cc">Read header.
 		/// Must be pointing to the next character of an open parenthesis within the string s</param>
-		public static bool FindClosingParenthesis(string s, ref int cc){
+		public static bool FindClosingPair(string s, ref int cc, char open, char close){
 			int par = 1;
 			while ((cc < s.Length) && (par > 0)) {
 				if (s [cc] == '\\') {
 					cc+= 2;
 					continue;
 				}
-				if (s [cc] == '(') ++par;
-				else if (s [cc] == ')') --par;
+				if (s [cc] == open) ++par;
+				else if (s [cc] == close) --par;
 				++cc;
 			}
 			--cc;
 			return par == 0;
-		}
-
-		/// <summary>
-		/// if s = '(' + s1 + ')', returns s1, otherwise returns s
-		/// </summary>
-		/// <param name="s">String to process</param>
-		public static void RemoveTopLevelPar(ref string s){
-			if ((s.Length < 1) || (s [0] == '('))
-				return;
-
-			int i;
-			StringBuilder sb = new(s.Length);
-			for (i = 0; i < s.Length -1; ++i) {
-				if (s [i] == '\\'){
-					++i;
-					continue;
-				}
-				else if ((s [i] == '(') || (s [i] == '|') || (s [i] == ')'))
-					return;
-				sb.Append(s[i]);
-			}
-			if (s [i] == ')')
-				s = sb.ToString ();
 		}
 
         public static bool IsValidParenthesisExpression(string sentence, char open, char close)
@@ -538,22 +517,22 @@ namespace RoboCup.AtHome.CommandGenerator
             return count == 0;
         }
 
-        public static string[] SplitRespectingParenthesis(string s)
+        public static string[] SplitRespectingParenthesis(string s, char opening, char closing, char splitChar)
         {
 			var results = new List<string>();
 
 			int cc = 0;
 			int bcc = 0;
 			while (cc < s.Length) {
-                if (s[cc] == '(')
+                if (s[cc] == opening)
                 {
 					cc += 1;
-                    if (!FindClosingParenthesis(s, ref cc))
+                    if (!FindClosingPair(s, ref cc, opening, closing))
                     {
                         return null;
                     }
                 }
-                if (s[cc] == '|')
+                if (s[cc] == splitChar)
                 {
                     results.Add(s[bcc..cc]);
 					cc += 1;
@@ -569,7 +548,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			return results.ToArray();
 		}
 
-        public static List<(int Start, int End)> FindParenthesisRanges(string sentence)
+        public static List<(int Start, int End)> FindParenthesisRanges(string sentence, char opening, char closing)
         {
             var parts = new List<(int Start, int End)>();
 
@@ -577,7 +556,7 @@ namespace RoboCup.AtHome.CommandGenerator
             int bcc = 0;
             while (cc < sentence.Length)
             {
-                if (sentence[cc] != '(')
+                if (sentence[cc] != opening)
                 {
                     cc += 1;
                     continue;
@@ -590,7 +569,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
                 bcc = cc;
                 cc += 1;
-                if (!FindClosingParenthesis(sentence, ref cc))
+                if (!FindClosingPair(sentence, ref cc, opening, closing))
                 {
 					return null;
                 }
@@ -604,5 +583,39 @@ namespace RoboCup.AtHome.CommandGenerator
             }
             return parts;
         }
+
+		private static readonly Regex nonTerminalIdentifierMatcher = new(@"(\$[0-9A-Za-z_]+)|({.+})");
+
+        /**
+		* Splits a rule , i.e. the right hand side of what this object represents, 
+		* into a list of strings, where each string either starts with $, starst with {, ends with } and has balance braces,
+		* or is literal text.
+		*/
+        public static string[] SplitRule(string rule) {
+			List<Match> matches = nonTerminalIdentifierMatcher.Matches(rule).Cast<Match>().ToList();
+			if (matches.Count == 0) {
+				return new string[] { rule };
+			}
+			var tokens = new List<string>();
+			var first = matches.First();
+			if (first.Index != 0) {
+				tokens.Add(rule.Substring(0, first.Index));
+			}
+			tokens.Add(rule.Substring(first.Index, first.Length));
+			int nextIndex = first.Index + first.Length;
+			foreach (Match m in matches.Skip(1)) {
+				if (nextIndex != m.Index) {
+					tokens.Add(rule[nextIndex..m.Index]);
+				}
+				tokens.Add(rule.Substring(m.Index, m.Length));
+				nextIndex = m.Index + m.Length;
+			}
+			if (nextIndex != rule.Length) {
+				tokens.Add(rule[nextIndex..]);
+			}
+            return tokens.SelectMany(t => {
+                return FindParenthesisRanges(t, '{', '}').Select(r => t[r.Start..(r.End+1)]);
+            }).ToArray();
+		}
     }
 }

@@ -143,7 +143,8 @@ namespace RoboCup.AtHome.CommandGenerator
 
             TaskNode node = new(nonTerminal, isNonTerminal: true);
 			node.Replacement = FindReplacement(nonTerminal, rnd);
-            string[] parts = ProductionRule.SplitRule(node.Replacement?.Value ?? "");
+			if (node.Replacement == null) return node;
+            string[] parts = Scanner.SplitRule(node.Replacement?.Value ?? "");
 			foreach (string part in parts) {
 				if (part.Contains("$")) {
 					TaskNode child = SolveNonTerminals(part, rnd, stackCounter + 1);

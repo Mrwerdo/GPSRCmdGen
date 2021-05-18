@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using System.Collections.Generic;
 
 namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 {
@@ -66,14 +67,15 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 		/// and the second one containing the answer
 		/// </summary>
 		[XmlIgnore]
-		string[] IMetadatable.Metadata
+        public List<string> Metadata
 		{
 			get
 			{
-				return new String[]{
-				String.Format("Q: {0}", this.Question),
-				String.Format("A: {0}", this.Answer)
-			};
+                return new List<string>
+                {
+                    $"Q: {Question}",
+                    $"A: {Answer}"
+                };
 			}
 		}
 

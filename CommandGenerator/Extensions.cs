@@ -147,6 +147,14 @@ namespace RoboCup.AtHome.CommandGenerator
 			}  
 		}
 
+
+		public static List<T> ShuffleCopy<T>(this IList<T> list, Random random) 
+		{
+            var copy = new List<T>(list);
+            copy.Shuffle(random);
+			return copy;
+		}
+
         public static T SelectUniform<T>(this ICollection<T> collection, Random random)
         {
             return collection.ElementAt(random.Next(collection.Count));

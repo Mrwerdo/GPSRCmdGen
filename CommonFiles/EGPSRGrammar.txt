@@ -33,12 +33,12 @@ $task      = $countobj
 
 ; Count people
 $task      = tell me how many $people there are in the $room
-$task      = tell me how many $peoplege in the $room
+$task      = tell me how many $peoplege in the $room <=> { "Name" : "CountPeople" }
 $task      = tell me how many $peopleR in the $room
 $task      = tell me how many $ppl in the $room are $peopleDsc
 
 ; Describe person
-$task      = $descper
+$task      = $descper <=> { "Name": "Describe" }
 
 ; Describe object
 $task      = $descobj

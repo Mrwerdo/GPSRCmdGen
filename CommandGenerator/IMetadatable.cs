@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -7,6 +7,6 @@ namespace RoboCup.AtHome.CommandGenerator
 	/// </summary>
 	public interface IMetadatable : INameable
 	{
-		string[] Metadata { get; }
+		List<string> Metadata { get; }
 	}
 }

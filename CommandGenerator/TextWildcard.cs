@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace RoboCup.AtHome.CommandGenerator
@@ -18,11 +19,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		private int index;
 
 		/// <summary>
-		/// Stores the Wildcard metadata
-		/// </summary>
-		private string metadata;
-
-		/// <summary>
 		/// Stores the name of the wildcard
 		/// </summary>
 		private string name;
@@ -35,7 +31,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		///Indicates if the wildcard is obfuscated
 		/// </summary>
-		private bool obfuscated;
+		public bool Obfuscated { get; private set; }
 
 		/// <summary>
 		/// Stores the type of the wildcard
@@ -43,19 +39,33 @@ namespace RoboCup.AtHome.CommandGenerator
 		private string type;
 
 		/// <summary>
-		/// Stores the original text from which the text wildcard was created
+		/// Gets the Wildcard metadata
 		/// </summary>
-		private string value;
+		public string Metadata { get; set; } 
+
+		/// <summary>
+		/// Gets the original text from which the text wildcard was created
+		/// </summary>
+		public string Value { get; private set; }
+
+        /// <summary>
+        /// Gets the string of where clauses
+        /// </summary>
+        public string Where { get; set; }
 
 		#endregion
 
 		#region Constructors
 
-		private TextWildcard() { }
+		private TextWildcard() { 
+			Children = new List<TextWildcard>();
+		}
 
 		#endregion
 
 		#region Properties
+
+		public List<TextWildcard> Children { get; set; }
 
 		/// <summary>
 		/// Gets the keycode associated to each wildcard group unique replacements
@@ -75,16 +85,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		}
 
 		/// <summary>
-		/// Gets the
-		/// </summary>
-		public int Index { get { return this.index; } }
-
-		/// <summary>
-		/// Gets the Wildcard metadata
-		/// </summary>
-		public string Metadata { get { return this.metadata; } internal set { this.metadata = value;} }
-
-		/// <summary>
 		/// Gets the name of the wildcard
 		/// </summary>
 		public string Name
@@ -92,11 +92,6 @@ namespace RoboCup.AtHome.CommandGenerator
 			get { return this.name; }
 			protected set{ this.name = String.IsNullOrEmpty (value) ? null : value.ToLower (); }
 		}
-
-		/// <summary>
-		/// Gets a value indicating if the wildcard is obfuscated
-		/// </summary>
-		public bool Obfuscated { get { return this.obfuscated; } }
 
 		/// <summary>
 		/// Gets a value indicating if the wildcard is valid
@@ -112,33 +107,43 @@ namespace RoboCup.AtHome.CommandGenerator
 			protected set{ this.type = String.IsNullOrEmpty (value) ? null : value.ToLower (); }
 		}
 
-		/// <summary>
-		/// Gets the original text from which the text wildcard was created
-		/// </summary>
-		public string Value { get { return this.value; } }
-
-        /// <summary>
-        /// Gets the string of where clauses
-        /// </summary>
-        public string Where{ get; internal set; }
-
 		#endregion
 
 		#region Methods
 
 		public override string ToString()
 		{
-			//string s = String.Empty;
-			//if (!String.IsNullOrEmpty(this.Name))
-			//    s += "Name=" + this.Name;
-			//if (!String.IsNullOrEmpty(this.Type))
-			//    s += " Type=" + this.Type;
-			//if (this.Id != -1)
-			//    s += String.Format(" Id={0}", this.Id);
-			//if (!String.IsNullOrEmpty(this.Metadata))
-			//    s += " Metadata=" + this.Metadata;
-			//return s.TrimStart();
-			return this.value;
+			return Value;
+		}
+
+		/// <summary>
+		/// Parses the where clauses and metadata in a text wildcard to extract nested wildcards (helper)
+		/// </summary>
+		/// <param name="w">The string containing nested TextWildcards to parse.</param>
+		private void ParseNestedWildcardsHelper(string s){
+			int cc = 0;
+			s ??= String.Empty;
+
+			do {
+				while ((cc < s.Length) && (s[cc] != '{')) cc += 1;
+				var inner = XtractWildcard (s, ref cc);
+				if (inner == null)
+					continue;
+				Children.Add(inner);
+				inner.ParseNestedWildcardsHelper(inner.Metadata);
+				inner.ParseNestedWildcardsHelper(inner.Where);
+			} while(cc < s.Length);
+		}
+
+		public List<TextWildcard> ToList() {
+            var l = new List<TextWildcard>
+            {
+                this
+            };
+            foreach (var child in Children) {
+				l.AddRange(child.ToList());
+			}
+			return l;
 		}
 
 		#endregion
@@ -159,7 +164,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			if (String.IsNullOrEmpty(wildcard.Name)) return null;
 
 			// Read obfuscator
-			wildcard.obfuscated = Scanner.ReadChar('?', s, ref cc);
+			wildcard.Obfuscated = Scanner.ReadChar('?', s, ref cc);
 
 			// Read wildcard type
 			wildcard.Type = ReadWildcardType(s, ref cc);
@@ -171,11 +176,13 @@ namespace RoboCup.AtHome.CommandGenerator
             wildcard.Where = ReadWhereClauses(s, ref cc);
 
 			// Read wildcard metadata
-			wildcard.metadata = ReadWildcardMetadata(s, ref cc);
+			wildcard.Metadata = ReadWildcardMetadata(s, ref cc);
 
 			// Set wildcard value
 			if (cc < s.Length) ++cc;
-			wildcard.value = s[wildcard.index..cc];
+			wildcard.Value = s[wildcard.index..cc];
+            wildcard.ParseNestedWildcardsHelper(wildcard.Metadata);
+			wildcard.ParseNestedWildcardsHelper(wildcard.Where);
 			return wildcard;
 		}
 
@@ -223,18 +230,18 @@ namespace RoboCup.AtHome.CommandGenerator
 			char[] meta = new char[]{'m','e','t','a'};
 			foreach(char c in meta){
 				if (Scanner.ReadChar(c, s, ref cc)) continue;
-				FindCloseBrace(s, ref cc);
+                Scanner.FindClosingPair(s, ref cc, '{', '}');
 				return null;
 			}
 			Scanner.SkipSpaces(s, ref cc);
 			if (!Scanner.ReadChar(':', s, ref cc))
 			{
-				FindCloseBrace(s, ref cc);
+                Scanner.FindClosingPair(s, ref cc, '{', '}');
 				return null;
 			}
-
-            FindCloseBrace(s, ref cc, out string metaContent);
-            return metaContent;
+			int bcc = cc;
+			Scanner.FindClosingPair(s, ref cc, '{', '}');
+			return s[bcc..cc];
 		}
 
 		private static int ReadWildcardId(string s, ref int cc)
@@ -243,61 +250,6 @@ namespace RoboCup.AtHome.CommandGenerator
             if (!Scanner.XtractUInt16(s, ref cc, out ushort usId)) return -1;
 			return usId;
 		}
-
-		/// <summary>
-		/// Finds the close brace.
-		/// </summary>
-		/// <param name="s">string to look inside</param>
-		/// <param name="cc">Read header.
-		/// Must be pointing to the next character of an open brace within the string s</param>
-		/// <returns><c>true</c>, if closing brace par was found, <c>false</c> otherwise.</returns>
-		protected internal static bool FindCloseBrace(string s, ref int cc)
-		{
-			int braces = 1;
-			while ((cc < s.Length) && (braces > 0))
-			{
-				if (s[cc] == '\\'){
-					cc+=2;
-					continue;
-				}
-				if (s[cc] == '{') ++braces;
-				else if (s[cc] == '}') --braces;
-				++cc;
-			}
-			--cc;
-			return braces == 0;
-		}
-
-		/// <summary>
-		/// Finds the close brace.
-		/// </summary>
-		/// <param name="s">string to look inside</param>
-		/// <param name="cc">Read header.
-		/// Must be pointing to the next character of an open brace within the string s</param>
-		/// <returns><c>true</c>, if closing brace par was found, <c>false</c> otherwise.</returns>
-		protected internal static bool FindCloseBrace(string s, ref int cc, out string subs)
-		{
-			int braces = 1;
-			StringBuilder sb = new(s.Length);
-
-			while ((cc < s.Length) && (braces > 0))
-			{
-				if (s[cc] == '\\'){
-					if (++cc < s.Length) sb.Append(s[cc]);
-					++cc;
-					continue;
-				}
-				if (s[cc] == '{') ++braces;
-				else if (s[cc] == '}') --braces;
-				sb.Append(s[cc]);
-				++cc;
-			}
-			--cc;
-			if(sb.Length > 0) --sb.Length;
-			subs = sb.ToString();
-			return braces == 0;
-		}
-
 		#endregion
 	}
 }

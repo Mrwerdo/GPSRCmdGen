@@ -14,33 +14,19 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Stores the list of grammar's tokens
 		/// </summary>
-		private List<Token> tokens;
 		public TaskNode Tree { get; set; }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="RoboCup.AtHome.CommandGenerator.Task"/> class.
-		/// </summary>
-		public Task (){
-			this.tokens = new List<Token>();
-		}
+        /// <summary>
+        /// Gets the list of tokens that compose the task.
+        /// </summary>
+        public List<Token> Tokens { get; set; }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="RoboCup.AtHome.CommandGenerator.Task"/> class.
-		/// </summary>
-		/// <param name="tokens">The list of tokens to be used to build the task</param>
-		public Task (List<Token> tokens)
-		{
-			if(tokens == null)return;
-			this.tokens = new List<Token>(tokens);
-		}
-
-		/// <summary>
-		/// Gets the list of tokens that compose the task.
-		/// </summary>
-		public List<Token> Tokens
-		{
-			get { return this.tokens; }
-			internal set { this.tokens = value; }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RoboCup.AtHome.CommandGenerator.Task"/> class.
+        /// </summary>
+        public Task()
+        {
+			Tokens = new List<Token>();
 		}
 
 		/// <summary>
@@ -50,8 +36,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		public override string ToString()
 		{
 			StringBuilder sb = new();
-			for (int i = 0; i < tokens.Count; ++i)
-				sb.Append (tokens [i].Name);
+			for (int i = 0; i < Tokens.Count; ++i)
+				sb.Append (Tokens [i].Name);
 			string s = sb.ToString ();
 			while(s.Contains("  "))
 				s = s.Replace ("  ", " ");

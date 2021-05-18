@@ -177,7 +177,7 @@ namespace RoboCup.AtHome.CommandGenerator
         private static string[] ExpandBranchExpresionGuarenteeValidResult(string sentence)
         {
             var results = new List<string>();
-            var topLevelBranches = Scanner.SplitRespectingParenthesis(sentence);
+            var topLevelBranches = Scanner.SplitRespectingParenthesis(sentence, '(', ')', '|');
             foreach (var branch in topLevelBranches)
             {
                 var parts = ExpandNestedBranch(branch).Select((t, i) => t.Trim());
@@ -188,7 +188,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
         private static string[] ExpandNestedBranch(string sentence)
         {
-            var parts = Scanner.FindParenthesisRanges(sentence);
+            var parts = Scanner.FindParenthesisRanges(sentence, '(', ')');
 
             var branches = new List<string[]>();
             foreach (var (Start, End) in parts)
@@ -235,38 +235,6 @@ namespace RoboCup.AtHome.CommandGenerator
         }
 
 		#endregion
-
-		private static readonly Regex nonTerminalIdentifierMatcher = new(@"(\$[0-9A-Za-z_]+)|({.+})");
-
-		/**
-		* Splits a rule , i.e. the right hand side of what this object represents, 
-		* into a list of strings, where each string either does not contain $, or is a valid
-		* non-terminal identifier.
-		*/
-		public static string[] SplitRule(string rule) {
-			List<Match> matches = ProductionRule.nonTerminalIdentifierMatcher.Matches(rule).Cast<Match>().ToList();
-			if (matches.Count == 0) {
-				return new string[] { rule };
-			}
-			var tokens = new List<string>();
-			var first = matches.First();
-			if (first.Index != 0) {
-				tokens.Add(rule.Substring(0, first.Index));
-			}
-			tokens.Add(rule.Substring(first.Index, first.Length));
-			int nextIndex = first.Index + first.Length;
-			foreach (Match m in matches.Skip(1)) {
-				if (nextIndex != m.Index) {
-					tokens.Add(rule[nextIndex..m.Index]);
-				}
-				tokens.Add(rule.Substring(m.Index, m.Length));
-				nextIndex = m.Index + m.Length;
-			}
-			if (nextIndex != rule.Length) {
-				tokens.Add(rule[nextIndex..]);
-			}
-			return tokens.ToArray();
-		}
 	}
 }
 

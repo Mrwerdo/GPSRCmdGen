@@ -14,28 +14,48 @@ namespace RoboCup.AtHome.CommandGenerator
 
         public static string RenderCommand(this TaskNode root)
         {
-            
-            // Detect the node, then apply it's corresponding function.
-            return "";
+            if (root.IsLiteral) {
+                return null;
+            }
+            if (root.Attributes == null) {
+                foreach (var child in root.Children) {
+                    var result = RenderCommand(child);
+                    if (result != null) {
+                        return result;
+                    }
+                }
+                return null;
+            }
+            switch (root.Attributes.Name)
+            {
+                case "CountPeople":
+                    var people = GetSymbolValue(root, "$peoplege");
+                    var room = GetSymbolValue(root, "$room");
+                    return $"CountPeople(type: {people}, location: {room})";
+                default:
+                    foreach (var child in root.Children)
+                    {
+                        var result = RenderCommand(child);
+                        if (result != null) {
+                            return result;
+                        }
+                    }
+                    return null;
+            }
         }
 
-        private static string Open(TaskNode node) {
-            return "";
-        }
-
-
-        // If true then the node does not participate in rendering, but it's children do.
-        private static bool IsHidden(TaskNode node) {
-            return "$Main".Equals(node.Value) && node.IsNonTerminal;
-        }
-
-        private static string Name(TaskNode node) {
-            if ("open the".Equals(node.Value) && node.IsLiteral) {
-                return "Open";
-            } else if ("close the".Equals(node.Value) && node.IsLiteral) {
-                return "Close";
+        private static string GetSymbolValue(TaskNode node, string nonTerminal) 
+        {
+            if (node.IsNonTerminal && node.Value == nonTerminal) {
+                return node.Render();
             } else {
-                return "Unknown";
+                foreach (var child in node.Children) {
+                    var result = GetSymbolValue(child, nonTerminal);
+                    if (result != null) {
+                        return result;
+                    }
+                }
+                return null;
             }
         }
     }
