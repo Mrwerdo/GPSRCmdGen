@@ -38,7 +38,7 @@ $task      = tell me how many $peopleR in the $room
 $task      = tell me how many $ppl in the $room are $peopleDsc
 
 ; Describe person
-$task      = $descper <=> { "Name": "Describe" }
+$task      = $descper <=> { "Name": "DescribePerson" }
 
 ; Describe object
 $task      = $descobj
@@ -93,13 +93,13 @@ $report    = $vbreport $repwho
 ; be accessed by the renderer as metadata on the TaskNode. The syntax is flexible
 ; so someone can write a new command language without breaking the program. Great!
 ; The attributes will also be stored on a production in the grammar.
-$descobj  = describe the objects in the {placement} to $repwho      <=> { "Name": "Describe" }
+$descobj  = describe the objects in the {placement} to $repwho
 
 # Describe person
 ####################################################################
 $descper  = tell me how the person $posture at the {beacon} looks like
 $descper  = describe the person $posture at the {beacon} to me
-$descper  = describe the person $posture at the {beacon} to the person at the {beacon}
+$descper  = describe the person $posture at the {beacon} to the person at the {beacon} <=> { "SpeakTo": "beacon:2", "Location" : "beacon:1" } 
 $descper  = describe to me the person $posture at the {beacon}
 
 # Bring from/to storage

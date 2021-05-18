@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -29,9 +25,28 @@ namespace RoboCup.AtHome.CommandGenerator
             switch (root.Attributes.Name)
             {
                 case "CountPeople":
-                    var people = GetSymbolValue(root, "$peoplege");
-                    var room = GetSymbolValue(root, "$room");
-                    return $"CountPeople(type: {people}, location: {room})";
+                    var people = root.Find("$peoplege");
+                    var room = root.FindWildcard("room").ReplacementValue;
+                    var gesture = people.FindWildcard("gesture").ReplacementValue;
+                    return $"CountPeople(type: {people.DeepestDecendent().Value}, gesture: {gesture}, location: {room})";
+                case "Open":
+                    // fixme: indexs like this are fragile, replace with a better mechanism.
+                    // This is a problem because information about branch expansion is not maintained.
+                    // See ProductionRule.ExpandBranchExpression
+                    var door = root.Replacement.Index switch {
+                        0 => "entrance",
+                        1 => "exit",
+                        2 => "corridor",
+                        _ => "unknown",
+                    };
+                    return $"Open(door: {door})";
+                case "DescribePerson":
+                    var posture = root.Find("$posture").DeepestDecendent().Value;
+                    var beacon = root.FindWildcard("beacon").ReplacementValue;
+                    var descper = root.Find("$descper");
+                    var speakTo = descper.Attributes.SpeakTo == null ? "speaker" : $"person at {descper.Attributes.SpeakTo}";
+                    var location = descper.Attributes.Location ?? beacon;
+                    return $"DescribePerson(posture: {posture}, location: {location}, speakingTo: {speakTo})";
                 default:
                     foreach (var child in root.Children)
                     {
@@ -44,19 +59,48 @@ namespace RoboCup.AtHome.CommandGenerator
             }
         }
 
-        private static string GetSymbolValue(TaskNode node, string nonTerminal) 
-        {
-            if (node.IsNonTerminal && node.Value == nonTerminal) {
-                return node.Render();
-            } else {
-                foreach (var child in node.Children) {
-                    var result = GetSymbolValue(child, nonTerminal);
-                    if (result != null) {
-                        return result;
-                    }
-                }
-                return null;
+        public static TaskNode DeepestDecendent(this TaskNode node) {
+            var child = node;
+            while (true) { 
+                var c = child.Children.FirstOrDefault();
+                if (c == null) break;
+                child = c;
             }
+            return child;
+        }
+
+        public static TextWildcard Find(this TextWildcard wildcard, string name)
+        {
+            if (wildcard.Name == name) return wildcard;
+            foreach (var child in wildcard.Children)
+            {
+                var result = child.Find(name);
+                if (result != null) return result;
+            }
+            return null;
+        }
+
+        public static TextWildcard FindWildcard(this TaskNode node, string name) 
+        {
+            var tw = node.TextWildcard?.Find(name);
+            if (tw != null) return tw;
+            foreach (var child in node.Children)
+            {
+                var result = FindWildcard(child, name);
+                if (result != null) return result;
+            }
+            return null;
+        }
+
+        public static TaskNode Find(this TaskNode node, string nonTerminal) 
+        {
+            if (node.IsNonTerminal && node.Value == nonTerminal) return node;
+            foreach (var child in node.Children)
+            {
+                var result = Find(child, nonTerminal);
+                if (result != null) return result;
+            }
+            return null;
         }
     }
 }
