@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -37,12 +36,23 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <summary>
 		/// Stores the list text wildcards this Wildcard unifies
 		/// </summary>
-		private readonly List<TextWildcard> textWildcards;
+		public List<TextWildcard> TextWildcards { get; private set; }
+
+        public Gender? Gender 
+        {
+            get {
+                if (Replacement is PersonName name) {
+                    return name.Gender;
+                } else {
+                    return null;
+                }
+            }
+        }
 
 		public Wildcard(List<TextWildcard> wildcards) {
-			textWildcards = wildcards;
+			TextWildcards = wildcards;
 			foreach (var child in wildcards) {
-				child.Parent.SetTarget(this);
+				child.AggregateWildcard.SetTarget(this);
 			}
 		}
 
@@ -51,7 +61,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		public string Name
 		{
-            get { return textWildcards.First().Name; }
+            get { return TextWildcards.First().Name; }
 		}
 
         /// <summary>
@@ -61,14 +71,11 @@ namespace RoboCup.AtHome.CommandGenerator
         {
             get
             {
-				if (textWildcards.Count == 0) {
+				if (TextWildcards.Count == 0) {
 					return null;
 				}
-				var groups = textWildcards.GroupBy(t => t.Type ?? "");
+				var groups = TextWildcards.GroupBy(t => t.Type ?? "");
 				var max = groups.Aggregate((l, r) => l.Count() > r.Count() ? l : r);
-                if (max.Count() == textWildcards.Count || string.IsNullOrWhiteSpace(max.First().Type)) {
-					return null;
-				}
                 return max.First().Type;
             }
         }
@@ -80,8 +87,8 @@ namespace RoboCup.AtHome.CommandGenerator
         {
             get
             {
-                Queue<string> clauses = new(textWildcards.Count);
-                foreach (TextWildcard t in textWildcards)
+                Queue<string> clauses = new(TextWildcards.Count);
+                foreach (TextWildcard t in TextWildcards)
                 {
                     if (!string.IsNullOrEmpty(t.Where))
                         clauses.Enqueue(t.Where);
@@ -94,8 +101,8 @@ namespace RoboCup.AtHome.CommandGenerator
 
         public override string ToString()
         {
-			var keycode = textWildcards.FirstOrDefault()?.Keycode ?? "";
-            return $"{keycode} ({textWildcards.Count})";
+			var keycode = TextWildcards.FirstOrDefault()?.Keycode ?? "";
+            return $"{keycode} ({TextWildcards.Count})";
         }
     }
 }

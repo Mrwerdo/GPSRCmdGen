@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 using Object = RoboCup.AtHome.CommandGenerator.ReplaceableTypes.Object;
 
@@ -51,6 +49,12 @@ namespace RoboCup.AtHome.CommandGenerator
 				if (pair.Value.Replacement != null) continue;
 				FindReplacement(pair.Value);
 			}
+
+			foreach (var pair in wildcardMap) {
+				if (pair.Value.Replacement != null) continue;
+				if (pair.Value.Name != "pron") continue;
+				EvaluatePronoun(pair.Value);
+			}
 		}
 
 		/// <summary>
@@ -92,9 +96,8 @@ namespace RoboCup.AtHome.CommandGenerator
 					EvaluateQuestion(w);
 					break;
 
-				// case "pron":
-				// 	EvaluatePronoun (w);
-				// 	break;
+				case "pron":
+					break;
 
 				case "void":
 				default:
@@ -105,30 +108,41 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 		}
 
-		// private void EvaluatePronoun(Wildcard w){
+        private static void EvaluatePronoun(Wildcard w)
+        {
+			foreach (var child in w.TextWildcards) {
+                if (child.Parent != null) 
+                {
+                    if (child.Parent.AggregateWildcard.TryGetTarget(out Wildcard p)) {
+						var r = Pronoun.FromWildcard(w, p);
+						w.Replacement = new NamedTaskElement(r);
+					}
+				}
+			}
             // Wildcard prev = null;
-			// string keycode;
-			// string keyword;
-			// for (int i = currentWildcardIx - 1; i >= 0; --i) {
-			// 	keycode = textWildcards [i].Keycode;
-			// 	keyword = wildcards [keycode].Keyword;
-			// 	if ((keyword != null) && keyword.IsAnyOf ("name", "male", "female")) {
-			// 		// prev = textWildcards [i];
-			// 		prev = wildcards [keycode];
-			// 		break;
-			// 	}
-			// }
-			// for (int i = currentWildcardIx - 1; (prev == null) && (i >= 0); --i) {
-			// 	keycode = textWildcards [i].Keycode;
-			// 	keyword = wildcards [keycode].Keyword;
-			// 	if ((keyword != null) && keyword.IsAnyOf ("void", "pron"))
-			// 		continue;
-			// 	// prev = textWildcards [i];
-			// 	prev = wildcards [keycode];
-			// 	break;
-			// }
-			// w.Replacement = new NamedTaskElement (Pronoun.FromWildcard (w, prev));
-		// }
+            // string keycode;
+            // string keyword;
+            // for (int i = currentWildcardIx - 1; i >= 0; --i) {
+            // 	keycode = textWildcards [i].Keycode;
+            // 	keyword = wildcards [keycode].Keyword;
+            // 	if ((keyword != null) && keyword.IsAnyOf ("name", "male", "female")) {
+            // 		// prev = textWildcards [i];
+            // 		prev = wildcards [keycode];
+            // 		break;
+            // 	}
+            // }
+            // for (int i = currentWildcardIx - 1; (prev == null) && (i >= 0); --i) {
+            // 	keycode = textWildcards [i].Keycode;
+            // 	keyword = wildcards [keycode].Keyword;
+            // 	if ((keyword != null) && keyword.IsAnyOf ("void", "pron"))
+            // 		continue;
+            // 	// prev = textWildcards [i];
+            // 	prev = wildcards [keycode];
+            // 	break;
+            // }
+            // w.Replacement = new NamedTaskElement(Pronoun.FromWildcard(w, prev));
+			
+		}
 
 		/// <summary>
 		/// Evaluates a <c>location</c> wildcard, asigning a replacement.

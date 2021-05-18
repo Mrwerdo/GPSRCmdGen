@@ -14,7 +14,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
         public static string RenderCommand(this TaskNode root)
         {
-            if (root.IsLiteral) {
+            if (!root.IsNonTerminal) {
                 return null;
             }
             if (root.Attributes == null) {

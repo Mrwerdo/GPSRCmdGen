@@ -1,12 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
     public class TextWildcard
 	{
-        public WeakReference<Wildcard> Parent;
+        public WeakReference<Wildcard> AggregateWildcard { get; private set; }
+		public TextWildcard Parent { get; set; }
+
+		public string Comment {
+			get {
+				var output = "";
+                if (!string.IsNullOrEmpty(Metadata))
+                {
+                    if (AggregateWildcard.TryGetTarget(out Wildcard wildcard))
+                    {
+                        if (string.IsNullOrEmpty(wildcard.Replacement.Name))
+                        {
+
+                            output += "Remarks\n";
+                        }
+                        else
+                        {
+                            output += wildcard.Replacement.Name + "\n";
+                        }
+                        output += "\t" + RenderedMetadata() + "\n";
+                    }
+				}
+				foreach (var child in Children) {
+					var o = child.Comment;
+					if (string.IsNullOrEmpty(o)) {
+						continue;
+					}
+					output += o + "\n";
+				}
+				return output;
+			}
+		}
+
+		public string ReplacementValue {
+			get {
+				if (AggregateWildcard.TryGetTarget(out Wildcard wildcard)) 
+				{
+					if (Obfuscated && wildcard.Obfuscated != null) {
+						return wildcard.Obfuscated.Name;
+					} else {
+						return wildcard.Replacement?.Name ?? "";
+					}
+				} else {
+					return "";
+				}
+			}
+		}
 
 		#region Variables
 
@@ -45,6 +91,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		public string Metadata { get; set; } 
 
+		private (int Start, int End) ParentRange { get; set; }
+
 		/// <summary>
 		/// Gets the original text from which the text wildcard was created
 		/// </summary>
@@ -55,13 +103,25 @@ namespace RoboCup.AtHome.CommandGenerator
         /// </summary>
         public string Where { get; set; }
 
+		/// <summary>
+		/// Heuristic for determining the word in the case of a gendered pronoun.
+		/// </summary>
+		public Gender? AggregateGender {
+            get
+            {
+				if (Parent != null) return Parent.AggregateGender;
+				return null;
+			}
+		}
+
 		#endregion
 
 		#region Constructors
 
 		private TextWildcard() { 
 			Children = new List<TextWildcard>();
-			Parent = new WeakReference<Wildcard>(null);
+			AggregateWildcard = new WeakReference<Wildcard>(null);
+			ParentRange = (-1, -1);
 		}
 
 		#endregion
@@ -109,6 +169,21 @@ namespace RoboCup.AtHome.CommandGenerator
 			return Value;
 		}
 
+		public string RenderedMetadata() 
+		{
+			var offset = 0;
+			var m = new string(Metadata);
+			foreach (var child in Children) {
+				if (child.ParentRange == (-1, -1)) continue;
+				var n =  child.ReplacementValue;
+				if (n == null) continue;
+                m = m.Remove(child.ParentRange.Start - offset, child.ParentRange.End - child.ParentRange.Start)
+					.Insert(child.ParentRange.Start - offset, n);
+				offset += child.ParentRange.End - child.ParentRange.Start - n.Length;
+			}
+			return m.Capitalize();
+		}
+
 		/// <summary>
 		/// Parses the where clauses and metadata in a text wildcard to extract nested wildcards (helper)
 		/// </summary>
@@ -119,9 +194,12 @@ namespace RoboCup.AtHome.CommandGenerator
 
 			do {
 				while ((cc < s.Length) && (s[cc] != '{')) cc += 1;
+				int bcc = cc;
 				var inner = XtractWildcard (s, ref cc);
 				if (inner == null)
 					continue;
+				inner.ParentRange = (bcc, cc);
+				inner.Parent = this;
 				Children.Add(inner);
 				inner.ParseNestedWildcardsHelper(inner.Metadata);
 				inner.ParseNestedWildcardsHelper(inner.Where);

@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -68,18 +65,6 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 		}
 
-        public bool IsLiteral
-        {
-            get
-            {
-                return !IsNonTerminal;
-            }
-			set 
-			{
-				IsNonTerminal = !value;
-			}
-        }
-
 		public override string ToString() {
 			return IsNonTerminal ? "$" + Value : Value;
 		}
@@ -101,33 +86,11 @@ namespace RoboCup.AtHome.CommandGenerator
 			if (IsNonTerminal) {
                 output += string.Join(" ", Children.ConvertAll(t => t.RenderPrivate()));
 			} else if (TextWildcard != null) {
-                if (TextWildcard.Parent.TryGetTarget(out Wildcard w))
-                {
-					if (TextWildcard.Obfuscated && w.Obfuscated != null) {
-						output += w.Obfuscated.Name;
-					} else {
-						output += w.Replacement.Name;
-					}
-                }
+				output += TextWildcard.ReplacementValue;
             } else {
 				output += Value;
 			}
 			return output;
-		}
-
-		public List<string> Comments() {
-			var l = new List<string>();
-			if (TextWildcard != null) {
-				if (TextWildcard.Parent.TryGetTarget(out Wildcard wildcard)) {
-					if (wildcard.Obfuscated != null) {
-                        l.Add(wildcard.Replacement.Name);
-					}
-				}
-			}
-			foreach (var child in Children) {
-				l.AddRange(child.Comments());
-			}
-			return l;
 		}
 
 		public string PrettyTree(int indent = 0) {
@@ -186,6 +149,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				Console.WriteLine(sTask.Substring(0, cut));
 				sTask = sTask[cut..].Trim();
 			} while (!string.IsNullOrEmpty(sTask));
+			Console.WriteLine();
             Console.WriteLine(PrintTaskMetadata());
 			Console.WriteLine();
 			// Prints another line
@@ -199,31 +163,15 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
 			var output = "";
 			EnumerateTree(t => {
-				output += t.PrintMetadata();
+                output += t.TextWildcard?.Comment ?? "";
 			});
 			if (extra) {
 				output += "\nParse tree:\n";
-				output += PrettyTree() + "\n";
+				output += PrettyTree() + "\n\n";
 				output += "Command:\n";
-				output += this.RenderCommand() + "\n";
+				output += this.RenderCommand();
 			}
 			return output + "\n";
-		}
-
-		private string PrintMetadata() {
-			var output = "";
-            if (TextWildcard != null && TextWildcard.Parent.TryGetTarget(out Wildcard wildcard))
-            {
-				if (!string.IsNullOrEmpty(TextWildcard.Metadata)) {
-					if (string.IsNullOrEmpty(wildcard.Replacement.Name)) {
-						output += "Remarks\n";
-					} else {
-						output += wildcard.Replacement.Name + "\n";
-					}
-					output += "\t" + TextWildcard.Metadata + "\n";
-				}
-			} 
-			return output;
 		}
 
 		public void EnumerateTree(Action<TaskNode> callback) {

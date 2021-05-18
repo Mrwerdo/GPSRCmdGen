@@ -196,7 +196,9 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		public static string Capitalize(this string s) {
 			if (s.Length > 1) {
-				return s[0..1].ToUpper() + s[1..];
+				int divider = 0;
+                Scanner.SkipSpaces(s, ref divider);
+				return s[0..(divider+1)].ToUpper() + s[(divider+1)..];
 			} else {
 				return s.ToUpper();
 			}
