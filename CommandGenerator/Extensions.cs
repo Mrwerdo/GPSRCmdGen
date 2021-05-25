@@ -214,6 +214,32 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
             return output;
         }
+
+        public static string Wrapped(this string str, int width, char split = ' ', char newline = '\n')
+        {
+            var output = "";
+            foreach (var line in str.Split(newline))
+            {
+                var parts = line.Split(split);
+                var currentLine = 0;
+                foreach (string part in parts)
+                {
+                    if (currentLine + part.Length > width)
+                    {
+                        output += newline;
+                        currentLine = 0;
+                    }
+                    if (currentLine > 0)
+                    {
+                        output += split;
+                        currentLine += 1;
+                    }
+                    output += part;
+                    currentLine += part.Length;
+                }
+            }
+            return output;
+        }
 	}
 }
 

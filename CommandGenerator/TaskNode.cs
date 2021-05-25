@@ -104,42 +104,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 		}
 
-		public void Print() 
-		{
-			string sTask = Render();
-			if (sTask.Length < 1)
-				return;
-
-			// switch Console color to white, backuping the previous one
-			ConsoleColor pc = Console.ForegroundColor;
-			Console.ForegroundColor = ConsoleColor.White;
-			Console.WriteLine();
-			// Prints a === line
-			string pad = string.Empty.PadRight(Console.BufferWidth - 1, '=');
-			Console.WriteLine(pad);
-			Console.WriteLine();
-
-			// Prints task string and metadata
-			sTask = sTask[0..1].ToUpper() + sTask[1..];
-			do
-			{
-				int cut = sTask.Length;
-				if (cut >= Console.BufferWidth)
-					cut = sTask.LastIndexOf(' ', Console.BufferWidth-1);
-				Console.WriteLine(sTask.Substring(0, cut));
-				sTask = sTask[cut..].Trim();
-			} while (!string.IsNullOrEmpty(sTask));
-			Console.WriteLine();
-            Console.WriteLine(PrintTaskMetadata());
-			Console.WriteLine();
-			// Prints another line
-			Console.WriteLine(pad);
-			// Restores Console color
-			Console.ForegroundColor = pc;
-			Console.WriteLine();
-		}
-
-		public string PrintTaskMetadata(bool extra = true)
+		public string MetadataDescription(bool extra = true)
 		{
 			var output = "";
 			EnumerateTree(t => {

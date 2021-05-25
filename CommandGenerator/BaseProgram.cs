@@ -43,11 +43,48 @@ namespace RoboCup.AtHome.CommandGenerator
 						return;
                     default:
 						var task = GetTask();
-						if (task != null) task.Print();
+						if (task != null) PrintTask(task);
                         break;
 				}
 			}
         }
+
+        private static void PrintTask(TaskNode task)
+        {
+            var header = new string('=', Console.BufferWidth - 1);
+            var sentence = task.Render().Capitalize().Wrapped(Console.BufferWidth);
+            var comments = "";
+            task.EnumerateTree(t =>
+            {
+                comments += t.TextWildcard?.Comment ?? "";
+            });
+            var parseTree = $"Parse Tree:\n{task.PrettyTree()}";
+            var command = $"Command:\n{task.RenderCommand()}";
+
+            var output = $"\n{header}\n\n{sentence}\n\n{comments}\n{parseTree}\n\n{command}\n\n{header}\n";
+            Console.WriteLine(output);
+        }
+
+        /// <summary>
+        /// Writes the provided message string to the console in GREEN text
+        /// </summary>
+        /// <param name="message">The message to be written.</param>
+        private static void Success(string message)
+        {
+            ConsoleColor pc = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine(message);
+            Console.ForegroundColor = pc;
+        }
+
+        private static void Warning(string message)
+        {
+            ConsoleColor pc = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.Error.WriteLine(message);
+            Console.ForegroundColor = pc;
+        }
+
 		private void Info(string msg) 
 		{
             if (Options.Verbose)
@@ -56,37 +93,57 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 		}
 
+        private void Error(string msg, Exception error = null)
+        {
+            var current = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.Error.Write("error: ");
+            Console.ForegroundColor = current;
+            Console.Error.WriteLine(msg);
+            if (Options.Verbose && error != null)
+                Console.Error.WriteLine(error.Message);
+        }
+
 		private void LoadData() 
 		{
-			Console.Write("Loading objects...");
-            var container = Loader.Load<CategoryContainer, Category>("Objects", "Objects.xml", Resources.Objects);
+            var container = Load<CategoryContainer, Category>("Objects", Options.Objects ?? "Objects.xml", Resources.Objects);
 			if (container == null) throw new Exception ("No objects found");
 			foreach (var c in container) {
 				generator.AllObjects.Add(c);
             }
 
-			Console.Write("Loading names...");
-            generator.AllNames = Loader.Load<NameContainer, PersonName>("Names", "Names.xml", Resources.Names);
+            generator.AllNames = Load<NameContainer, PersonName>("Names", Options.Names ?? "Names.xml", Resources.Names);
 
-			Console.Write("Loading locations...");
-            var locations = Loader.Load<RoomContainer, Room>("Locations", "Locations.xml", Resources.Locations);
+            var locations = Load<RoomContainer, Room>("Locations", "Locations.xml", Resources.Locations);
 			if (locations == null) throw new Exception("No locations found");
 			foreach (var l in locations) {
 				generator.AllLocations.Add(l);
 			}
 
-			Console.Write("Loading gestures...");
-            generator.AllGestures = Loader.Load<GestureContainer, Gesture>("Gestures", "Gestures.xml", Resources.Gestures);
+            generator.AllGestures = Load<GestureContainer, Gesture>("Gestures", "Gestures.xml", Resources.Gestures);
 
-			Console.Write("Loading predefined questions...");
-            generator.AllQuestions = Loader.Load<QuestionsContainer, PredefinedQuestion>("Questions", "Questions.xml", Resources.Questions);
+            generator.AllQuestions = Load<QuestionsContainer, PredefinedQuestion>("Questions", "Questions.xml", Resources.Questions);
 
 			Console.Write("Loading grammars...");
             generator.Grammar = LoadGrammars();
-			Generator.Green("Done");
+			Success("\tDone");
 			generator.ValidateLocations();
 		}
 
+        public static List<V> Load<P, V>(string name, string path, string backup) where P : ILoadingContainer<V>
+		{
+			try {
+				Console.Write($"Loading {name.ToLower()}...");
+                P obj = Loader.LoadObject<P>(Loader.GetPath(path));
+                Success("\tDone");
+				return obj.Results;
+			} catch {
+                P obj = Loader.LoadXmlString<P>(backup);
+                Warning($"Default {name} loaded");
+				Console.WriteLine();
+				return obj.Results;
+			}
+		}
 
 		private TaskNode GetTask() {
 			try
@@ -95,13 +152,12 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 			catch (StackOverflowException)
 			{
-				Generator.Err("Could not generate grammar. Grammar is recursive");
+                Error("Could not generate grammar. Grammar is recursive");
 			}
-			catch (Exception e)
+			catch (Exception error)
 			{
-				Generator.Err("Could not generate grammar. Unexpected error");
-				Console.WriteLine(e.Message);
-			}
+                Error("Could not generate grammar. Unexpected error", error);
+            }
 			return null;
 		}
 
@@ -142,6 +198,8 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		public void Setup()
         {
+            if (!FilesExist()) Environment.Exit(-1);
+
 			Console.ForegroundColor = ConsoleColor.Gray;
 			Info("");
 			Info("GPSR Generator 2019 Release Candidate");
@@ -149,6 +207,18 @@ namespace RoboCup.AtHome.CommandGenerator
 			LoadData();
 			Info("");
 			Info("");
+		}
+
+		private bool FilesExist() {
+			foreach (string path in Options.Files)
+			{
+				if (!File.Exists(path))
+				{
+					Error($"{path} does not exist.");
+					return false;
+				}
+			}
+			return true;
 		}
 
 		private TextWriter GetOutputStream()
@@ -187,7 +257,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteLine();
 			writer.WriteLine(sTask);
 			writer.WriteLine();
-			writer.Write(task.PrintTaskMetadata(false));
+			writer.Write(task.MetadataDescription(false));
 			// List<string> remarks = new();
 			// foreach (Token token in task.Tokens)
 			// {

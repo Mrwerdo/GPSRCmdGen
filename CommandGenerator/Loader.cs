@@ -80,7 +80,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="filePath">The path of the XML file</param>
 		/// <typeparam name="T">The type of object to load.</typeparam>
 		/// <returns>The object in the XML file</returns>
-		private static T LoadObject<T>(string filePath)
+		public static T LoadObject<T>(string filePath)
 		{
 			T item;
 			using (StreamReader reader = new(filePath, ASCIIEncoding.UTF8))
@@ -100,7 +100,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="xml">An XML encoded string</param>
 		/// <typeparam name="T">The type of object to load.</typeparam>
 		/// <returns>The object in the XML string</returns>
-		private static T LoadXmlString<T>(string xml)
+		public static T LoadXmlString<T>(string xml)
 		{
 			T item;
 			using (MemoryStream ms = new(Encoding.UTF8.GetBytes(xml ?? String.Empty)))
@@ -139,19 +139,6 @@ namespace RoboCup.AtHome.CommandGenerator
             }
             stream.Close();
         }
-
-        public static List<V> Load<P, V>(string name, string path, string backup) where P : ILoadingContainer<V>
-		{
-			try {
-				P obj = LoadObject<P>(GetPath(path));
-                Generator.Green("Done!");
-				return obj.Results;
-			} catch {
-                P obj = LoadXmlString<P>(backup);
-                Generator.Err($"Failed! Default {name} loaded");
-				return obj.Results;
-			}
-		}
 
 		/// <summary>
 		/// Serializes the specified list of T objects into a string.

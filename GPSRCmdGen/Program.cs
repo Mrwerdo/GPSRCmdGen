@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using CommandLine;
 using RoboCup.AtHome.CommandGenerator;
@@ -31,13 +32,6 @@ namespace RoboCup.AtHome.GPSRCmdGen
 			Parser.Default.ParseArguments<Options>(args)
             .WithParsed(options =>
             {
-                foreach (string path in options.Files)
-                {
-                    if (!File.Exists(path))
-                    {
-                        Generator.Err($"{path} does not exist!");
-                    }
-                }
                 var program = new BaseProgram(options)
 				{
 					Name = "GPSRCmdGen",

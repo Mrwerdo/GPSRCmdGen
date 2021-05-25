@@ -185,11 +185,9 @@ namespace RoboCup.AtHome.CommandGenerator.ReplaceableTypes
 		/// <param name="referee">The wildcard being referred.</param>
 		public static string FromWildcard(Wildcard referral, Wildcard referee){
 			if ((referee == null) || (referral == null)){
-				Console.WriteLine("referral or referee is null");
 				throw new NullReferenceException ("referral or referee is null");
 			}
 			if (referral.Name != "pron"){
-				Console.WriteLine("referral is not a {pron} wildcard");
 				throw new InvalidOperationException ("referral is not a {pron} wildcard");
 			}
 

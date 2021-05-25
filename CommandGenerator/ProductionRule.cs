@@ -131,11 +131,9 @@ namespace RoboCup.AtHome.CommandGenerator
 			if (attr != null && !attr.Equals("")) {
                 var options = new JsonSerializerOptions() { IgnoreNullValues = true };
                 pr.Attributes = JsonSerializer.Deserialize<ProductionRuleAttributes>(attr, options);
-				Console.WriteLine("attributes: " + pr.Attributes.ToString());
 			}
 			var replacements = ExpandBranchExpression(prod);
 			if (replacements == null) {
-				Console.WriteLine($"Invalid expression: {prod}");
 				pr.Replacements = new ();
 				pr.Replacements.Add(prod);
 			} else {

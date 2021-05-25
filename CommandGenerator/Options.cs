@@ -17,6 +17,21 @@ namespace RoboCup.AtHome.CommandGenerator
         [Option('s', "seed", Default = 0)]
         public int SeedOption { get; set; }
 
+        [Option('g', "gestures")]
+        public string Gestures { get; set; }
+
+        [Option('l', "locations")]
+        public string Locations { get; set; }
+
+        [Option('n', "names")]
+        public string Names { get; set; }
+
+        [Option('o', "objects")]
+        public string Objects { get; set; }
+
+        [Option('q', "questions")]
+        public string Questions { get; set; }
+
         [Value(0)]
         public IEnumerable<string> Files { get; set; }
 
