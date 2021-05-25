@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 using Object = RoboCup.AtHome.CommandGenerator.ReplaceableTypes.Object;
@@ -15,10 +16,20 @@ namespace RoboCup.AtHome.CommandGenerator
 		private Grammar grammar;
 		protected XmlWriter writer;
 		private List<Gesture> gestures;
-		private readonly LocationManager locations;
+		private List<Room> rooms;
 		private List<PersonName> names;
 		private readonly ObjectManager objects;
 		private List<PredefinedQuestion> questions;
+
+		private List<Location> Locations {
+			get {
+				if (rooms == null) return null;
+				var locations = new List<Location>();
+				locations.AddRange(rooms);
+                locations.AddRange(rooms.SelectMany(t => t.Locations));
+				return locations;
+			}
+		}
 		//private static 
 
 		/// <summary>
@@ -27,7 +38,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		private GrammarConverter()
 		{
 			this.objects = ObjectManager.Instance;
-			this.locations = LocationManager.Instance;
 		}
 
 		/// <summary>
@@ -54,7 +64,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="gestures">List of gesture names</param>
 		/// <param name="names">List of people name</param>
 		/// <param name="questions">List of known questions</param>
-		public static void SaveToSRGS(Grammar grammar, string filePath, List<Gesture> gestures, List<PersonName> names, List<PredefinedQuestion> questions)
+		public static void SaveToSRGS(Grammar grammar, string filePath, List<Gesture> gestures, List<PersonName> names, List<PredefinedQuestion> questions, List<Room> rooms)
 		{
 			if (grammar == null) throw new ArgumentNullException(nameof(grammar));
             GrammarConverter converter = new()
@@ -62,7 +72,8 @@ namespace RoboCup.AtHome.CommandGenerator
                 grammar = grammar,
                 gestures = gestures,
                 names = names,
-                questions = questions
+                questions = questions,
+				rooms = rooms
             };
 
             converter.ConvertToXmlSRGS(filePath);
@@ -397,7 +408,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		private void SRGSWriteLocationsRules()
 		{
-			if (locations == null)
+			if (rooms == null)
 				return;
 			writer.WriteStartElement("rule");
 			writer.WriteAttributeString("id", "_locations");
@@ -431,7 +442,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteAttributeString("scope", "private");
 			writer.WriteStartElement("one-of");
 			HashSet<string> hsLocations = new();
-			foreach (Location loc in locations)
+			foreach (Location loc in Locations)
 			{
 				if (loc.IsBeacon && !hsLocations.Contains(loc.Name))
 					SRGSWriteItem(loc.Name);
@@ -447,7 +458,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteAttributeString("scope", "private");
 			writer.WriteStartElement("one-of");
 			HashSet<string> hsLocations = new();
-			foreach (Location loc in locations)
+			foreach (Location loc in Locations)
 			{
 				if (loc.IsPlacement && !hsLocations.Contains(loc.Name))
 					hsLocations.Add(loc.Name);
@@ -471,13 +482,13 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteAttributeString("id", "_rooms");
 			writer.WriteAttributeString("scope", "private");
 			writer.WriteStartElement("one-of");
-			foreach (Room room in locations.Rooms)
+			foreach (Room room in rooms)
 			{
 				SRGSWriteItem(room.Name);
 			}
 
 			HashSet<string> hsRooms = new();
-			foreach (Room room in locations.Rooms)
+			foreach (Room room in rooms)
 			{
 				if (!hsRooms.Contains(room.Name))
 					hsRooms.Add(room.Name);

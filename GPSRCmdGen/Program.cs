@@ -114,11 +114,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
             generator.AllNames = Load<NameContainer, PersonName>("Names", Options.Names ?? "Names.xml", Resources.Names);
 
-            var locations = Load<RoomContainer, Room>("Locations", "Locations.xml", Resources.Locations);
-			if (locations == null) throw new Exception("No locations found");
-			foreach (var l in locations) {
-				generator.AllLocations.Add(l);
-			}
+            generator.AllRooms = Load<RoomContainer, Room>("Locations", "Locations.xml", Resources.Locations);
 
             generator.AllGestures = Load<GestureContainer, Gesture>("Gestures", "Gestures.xml", Resources.Gestures);
 
@@ -127,7 +123,6 @@ namespace RoboCup.AtHome.CommandGenerator
 			Console.Write("Loading grammars...");
             generator.Grammar = LoadGrammars();
 			Success("\tDone");
-			generator.ValidateLocations();
 		}
 
         public static List<V> Load<P, V>(string name, string path, string backup) where P : ILoadingContainer<V>

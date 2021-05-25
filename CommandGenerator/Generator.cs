@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 
 namespace RoboCup.AtHome.CommandGenerator
@@ -20,9 +21,9 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		public List<Gesture> AllGestures { get; set; }
 		/// <summary>
-		/// Stores all known locations
+		/// Stores all known rooms.
 		/// </summary>
-		public LocationManager AllLocations { get; set; }
+		public List<Room> AllRooms { get; set; }
 		/// <summary>
 		/// Stores all known names
 		/// </summary>
@@ -52,7 +53,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		public Generator (int seed)
 		{
             Rnd = new Random(seed);
-            AllLocations = LocationManager.Instance;
             AllObjects = ObjectManager.Instance;
             Quiet = false;
 		}
@@ -67,12 +67,16 @@ namespace RoboCup.AtHome.CommandGenerator
         public TaskNode GenerateTask()
 		{
             TaskNode root = Grammar.GenerateSentence(Rnd);
+            var locations = new List<Location>();
+            locations.AddRange(AllRooms);
+            locations.AddRange(AllRooms.SelectMany(t => t.Locations));
+            locations.AddRange(AllObjects.Categories.Select(t => t.DefaultLocation).Where(t => !AllRooms.Any(r => r.Name == t.Name)));
             var evaluator = new WildcardEvaluator() 
 			{
                 Random = Rnd,
                 Categories = AllObjects.Categories.ShuffleCopy(Rnd),
 				Gestures = AllGestures.ShuffleCopy(Rnd),
-				Locations = new List<Location>(AllLocations).ShuffleCopy(Rnd),
+                Locations = locations.ShuffleCopy(Rnd),
 				Names = AllNames.ShuffleCopy(Rnd),
 				Objects = AllObjects.Objects.ShuffleCopy(Rnd),
 				Questions = AllQuestions.ShuffleCopy(Rnd)
@@ -80,22 +84,6 @@ namespace RoboCup.AtHome.CommandGenerator
             evaluator.Update(root.Wildcards);
             return root;
         }
-
-        #region Load Methods
-
-		/// <summary>
-		/// Validates all default locations of categories are contained in the locations array.
-		/// </summary>
-		public void ValidateLocations()
-		{
-			foreach(Category c in AllObjects.Categories)
-			{
-				if (!AllLocations.Contains (c.DefaultLocation))
-					AllLocations.Add (c.DefaultLocation);
-			}
-		}
-
-		#endregion
 	}
 }
 
