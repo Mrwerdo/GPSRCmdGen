@@ -120,9 +120,7 @@ namespace RoboCup.AtHome.CommandGenerator
         /// <returns>A randomly generated sentence.</returns>
         public TaskNode GenerateSentence(Random rnd)
         {
-			TaskNode root = SolveNonTerminals("$Main", rnd);
-			root.Tier = Tier;
-			return root;
+			return SolveNonTerminals("$Main", rnd);
 		}
 
 		/// <summary>
@@ -148,11 +146,11 @@ namespace RoboCup.AtHome.CommandGenerator
 			foreach (string part in parts) {
 				if (part.Contains("$")) {
 					TaskNode child = SolveNonTerminals(part, rnd, stackCounter + 1);
-					child.Parent.SetTarget(node);
+					child.Parent = node;
 					node.Children.Add(child);
 				} else {
 					TaskNode child = new(part, isNonTerminal: false);
-					child.Parent.SetTarget(node);
+					child.Parent = node;
 					node.Children.Add(child);
 				}
 			}

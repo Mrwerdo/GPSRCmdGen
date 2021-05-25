@@ -8,27 +8,7 @@ namespace RoboCup.AtHome.CommandGenerator
 	/// </summary>
 	public class TaskNode
 	{
-		private DifficultyDegree? _tier;
-        public DifficultyDegree? Tier {
-			get {
-				if (_tier.HasValue) {
-					return _tier.Value;
-				} else {
-                    if (Parent.TryGetTarget(out TaskNode p))
-                    {
-                        return p.Tier;
-                    }
-                    else
-                    {
-                        throw new ArgumentNullException("This node's Tier property is not set, nor are any of its parents Tier property set.");
-                    }
-                }
-			}
-			set {
-				_tier = value;
-			}
-		}
-		public WeakReference<TaskNode> Parent { get; private set; }
+		public TaskNode Parent { get; set; }
 		/// <summary>
 		/// If empty then this is a terminal node.
 		/// </summary>
@@ -56,7 +36,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		public TaskNode(string value, bool isNonTerminal) {
 			Value = value;
 			IsNonTerminal = isNonTerminal;
-			Parent = new WeakReference<TaskNode>(null);
+			Parent = null;
 			Children = new List<TaskNode>();
 
 			if (!IsNonTerminal) {
