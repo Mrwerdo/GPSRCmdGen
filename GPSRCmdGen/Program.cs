@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using RoboCup.AtHome.CommandGenerator;
 using RoboCup.AtHome.CommandGenerator.Containers;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
 
-namespace RoboCup.AtHome.CommandGenerator
+namespace RoboCup.AtHome.GPSRCmdGen
 {
 	/// <summary>
 	/// Base class for program control logic

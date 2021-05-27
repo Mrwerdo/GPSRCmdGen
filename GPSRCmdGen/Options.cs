@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using CommandLine;
 
-namespace RoboCup.AtHome.CommandGenerator
+namespace RoboCup.AtHome.GPSRCmdGen
 {
     public class Options {
         [Option('b', "bulk", Default = 0, HelpText = "Generate bulk sentences.")]
