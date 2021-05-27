@@ -5,17 +5,15 @@ using CommandLine;
 namespace RoboCup.AtHome.GPSRCmdGen
 {
     public class Options {
-        [Option('b', "bulk", Default = 0, HelpText = "Generate bulk sentences.")]
-        public int Bulk { get; set; }
 
-        [Option('o', "output")]
-        public string Output { get; set; }
-
-        [Option('v', "verbose", Default = true)]
+        [Option('v', "verbose", Default = false)]
         public bool Verbose { get; set; }
         
         [Option('s', "seed", Default = 0)]
         public int SeedOption { get; set; }
+
+        [Option('g', "grammar")]
+        public IEnumerable<string> Grammars { get; set; }
 
         [Option('g', "gestures")]
         public string Gestures { get; set; }
@@ -31,9 +29,6 @@ namespace RoboCup.AtHome.GPSRCmdGen
 
         [Option('q', "questions")]
         public string Questions { get; set; }
-
-        [Value(0)]
-        public IEnumerable<string> Files { get; set; }
 
         public int Seed {
             get {
