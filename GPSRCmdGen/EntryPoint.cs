@@ -28,9 +28,8 @@ namespace RoboCup.AtHome.GPSRCmdGen
                     Options = options
                 };
 
-                if (!loader.ValidatePaths()) return;
-
                 var generator = loader.LoadGenerator();
+                if (generator == null) return;
                 var program = new InteractiveProgram()
                 {
                     Logger = logger,
@@ -51,9 +50,8 @@ namespace RoboCup.AtHome.GPSRCmdGen
                     Options = options
                 };
 
-				if (!loader.ValidatePaths()) return;
-				
                 var generator = loader.LoadGenerator();
+                if (generator == null) return;
                 var program = new BulkProgram()
                 {
                     Logger = logger,

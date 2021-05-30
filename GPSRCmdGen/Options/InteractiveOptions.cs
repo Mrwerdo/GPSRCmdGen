@@ -2,6 +2,6 @@ using CommandLine;
 
 namespace RoboCup.AtHome.GPSRCmdGen
 {
-    [Verb("interactive", isDefault: true)]
+    [Verb("interactive")]
     public class InteractiveOptions: Options { }
 }

@@ -8,13 +8,13 @@
             "preLaunchTask": "build-gpsr",
             "program": "${workspaceFolder}/GPSRCmdGen/bin/Debug/net5.0/GPSRCmdGen.dll",
             "args": [
-                "--seed", "21",
-                "../CommonFiles/CommonRules.txt",
-                "../CommonFiles/EGPSRGrammar.txt"
+                "--seed", "22",
+                "--grammar", "../CommonFiles/CommonRules.txt", "../CommonFiles/EGPSRGrammar.txt"
             ],
             "cwd": "${workspaceFolder}/GPSRCmdGen",
             "stopAtEntry": false,
             "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
             "logging": {
                 "moduleLoad": false
             }

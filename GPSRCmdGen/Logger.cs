@@ -42,6 +42,15 @@ namespace RoboCup.AtHome.GPSRCmdGen
 			}
 		}
 
+        public void Quiet(string msg)
+        {
+
+            ConsoleColor pc = Console.ForegroundColor;
+            SetColor(ConsoleColor.DarkGray);
+            Console.Error.WriteLine(msg);
+            SetColor(pc);
+        }
+
         public void Error(string msg, Exception error = null)
         {
             var current = Console.ForegroundColor;
@@ -51,6 +60,21 @@ namespace RoboCup.AtHome.GPSRCmdGen
             Console.Error.WriteLine(msg);
             if (Verbose && error != null)
                 Console.Error.WriteLine(error.Message);
+        }
+
+        public void Error(Exception error)
+        {
+            var current = Console.ForegroundColor;
+            SetColor(ConsoleColor.DarkRed);
+            if (Verbose) {
+                Console.Error.WriteLine("\tError");
+            } else {
+                Console.Error.Write("error: ");
+            }
+            SetColor(current);
+            if (Verbose) Console.Error.WriteLine();
+            Console.Error.WriteLine(error.Message);
+            if (Verbose) Console.Error.WriteLine();
         }
 
         public void ProgramInfo(string name, string longName) {

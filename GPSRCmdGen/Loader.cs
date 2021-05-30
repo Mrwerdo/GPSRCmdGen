@@ -15,43 +15,33 @@ namespace RoboCup.AtHome.GPSRCmdGen
 
         public Loader() { }
 
-		public bool ValidatePaths() {
-            if (Options.Grammars.Any(t => PathDoesNotExist("Grammar", t))) return false;
-            // if (PathDoesNotExist("Objects", Options.Objects)) return false;
-            // if (PathDoesNotExist("Names", Options.Names)) return false;
-            // if (PathDoesNotExist("Locations", Options.Locations)) return false;
-            // if (PathDoesNotExist("Gestures", Options.Gestures)) return false;
-            // if (PathDoesNotExist("Questions", Options.Questions)) return false;
-            return true;
-		}
-
-        private bool PathDoesNotExist(string name, string path) {
-            if (!File.Exists(path)) {
-                Logger.Error($"{name} path could not be found: {path}");
-                return true;
-            }
-            return false;
-        }
-
         public Generator LoadGenerator()
         {
             var generator = new Generator(Options.Seed);
-            var container = Load<CategoryContainer, Category>("Objects", Options.Objects ?? "Objects.xml", Resources.Objects);
-            if (container == null) throw new Exception("No objects found");
-            foreach (var c in container)
+            try
             {
-                generator.AllObjects.Add(c);
+                var container = Load<CategoryContainer, Category>("Objects", Options.Objects, Resources.Objects);
+                if (container == null) throw new Exception("No objects found");
+                foreach (var c in container)
+                {
+                    generator.AllObjects.Add(c);
+                }
+
+                generator.AllNames = Load<NameContainer, PersonName>("Names", Options.Names, Resources.Names);
+                generator.AllRooms = Load<RoomContainer, Room>("Locations", Options.Locations, Resources.Locations);
+                generator.AllGestures = Load<GestureContainer, Gesture>("Gestures", Options.Gestures, Resources.Gestures);
+                generator.AllQuestions = Load<QuestionsContainer, PredefinedQuestion>("Questions", Options.Questions, Resources.Questions);
+
+                Logger.Info("Loading grammars...", ' ');
+                generator.Grammar = LoadGrammars(Options.Grammars);
+                if (Options.Verbose) Logger.Success("\tDone");
+                return generator;
             }
-
-            generator.AllNames = Load<NameContainer, PersonName>("Names", Options.Names ?? "Names.xml", Resources.Names);
-            generator.AllRooms = Load<RoomContainer, Room>("Locations", Options.Locations ?? "Locations.xml", Resources.Locations);
-            generator.AllGestures = Load<GestureContainer, Gesture>("Gestures", Options.Gestures ?? "Gestures.xml", Resources.Gestures);
-            generator.AllQuestions = Load<QuestionsContainer, PredefinedQuestion>("Questions", Options.Questions ?? "Questions.xml", Resources.Questions);
-
-            Logger.Info("Loading grammars...", ' ');
-            generator.Grammar = LoadGrammars(Options.Grammars);
-            if (Options.Verbose) Logger.Success("\tDone");
-            return generator;
+            catch (Exception e)
+            {
+                Logger.Error(e);
+                return null;
+            }
         }
 
         private static Grammar LoadGrammars(IEnumerable<string> Grammars)
@@ -88,18 +78,17 @@ namespace RoboCup.AtHome.GPSRCmdGen
 
         private List<V> Load<P, V>(string name, string path, string backup) where P : ILoadingContainer<V>
         {
-            try
+            Logger.Info($"Loading {name.ToLower()}...", ' ');
+            if (path != null)
             {
-                Logger.Info($"Loading {name.ToLower()}...", ' ');
-                P obj = CommandGenerator.Loader.LoadObject<P>(CommandGenerator.Loader.GetPath(path));
+                P obj = CommandGenerator.Loader.LoadObject<P>(path);
                 if (Options.Verbose) Logger.Success("\tDone");
                 return obj.Results;
             }
-            catch
+            else
             {
                 P obj = CommandGenerator.Loader.LoadXmlString<P>(backup);
-                Logger.Warning($"Default {name} loaded");
-                Logger.Info("");
+                if (Options.Verbose) Logger.Quiet($"\tDefault");
                 return obj.Results;
             }
         }
