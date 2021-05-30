@@ -15,6 +15,8 @@ namespace RoboCup.AtHome.GPSRCmdGen
 		public void Run()
 		{
 			Logger.Info("");
+			Logger.Info($"Using seed: {Options.Seed}");
+			Logger.Info("");
 			while (true) {
 				Console.Write($"{Name} (press q to quit): ");
 				ConsoleKeyInfo key = Console.ReadKey();

@@ -23,9 +23,9 @@ namespace RoboCup.AtHome.GPSRCmdGen
 
 		public void Run()
 		{
-            Logger.Info($"Generating {Options.Bulk} examples in bulk mode");
+            Logger.Info($"Generating {Options.Count} examples in bulk mode");
 			using var writer = GetOutputStream();
-            for (int i = 1; i <= Options.Bulk; ++i)
+            for (int i = 1; i <= Options.Count; ++i)
             {
                 TaskNode task = Generator.GenerateTask();
                 if (task == null) continue;
