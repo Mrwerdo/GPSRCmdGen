@@ -113,28 +113,17 @@ namespace RoboCup.AtHome.CommandGenerator
 		}
 
         /// <summary>
-        /// Generates a random sentence.
+        /// Solves all the non-terminal symbols within the given sentence.
         /// </summary>
+        /// <param name="sentence">A string with non-terminal symbols to replace.</param>
         /// <param name="rnd">Random number generator used to choose the
         /// productions and generate the sentence</param>
-        /// <returns>A randomly generated sentence.</returns>
-        public TaskNode GenerateSentence(Random rnd)
-        {
-			return SolveNonTerminals("$Main", rnd);
-		}
-
-		/// <summary>
-		/// Solves all the non-terminal symbols within the given sentence.
-		/// </summary>
-		/// <param name="sentence">A string with non-terminal symbols to replace.</param>
-		/// <param name="rnd">Random number generator used to choose the
-		/// productions and generate the sentence</param>
-		/// <param name="stackCounter">A counter that indicates how many times
-		/// this function has called itself. It is used to prevent a stack overflow.
-		/// When it reach 1000 the production is aborted.</param>
-		/// <returns>A string with terminal symbols only</returns>
-		/// <remarks>Recursive function</remarks>
-		private TaskNode SolveNonTerminals (string nonTerminal, Random rnd, int stackCounter = 0)
+        /// <param name="stackCounter">A counter that indicates how many times
+        /// this function has called itself. It is used to prevent a stack overflow.
+        /// When it reach 1000 the production is aborted.</param>
+        /// <returns>A string with terminal symbols only</returns>
+        /// <remarks>Recursive function</remarks>
+        public TaskNode GenerateSentence(string nonTerminal, Random rnd, int stackCounter = 0)
 		{
 			if (++stackCounter > 999)
 				throw new StackOverflowException ();
@@ -145,7 +134,7 @@ namespace RoboCup.AtHome.CommandGenerator
             string[] parts = Scanner.SplitRule(node.Replacement?.Value ?? "");
 			foreach (string part in parts) {
 				if (part.Contains("$")) {
-					TaskNode child = SolveNonTerminals(part, rnd, stackCounter + 1);
+					TaskNode child = GenerateSentence(part, rnd, stackCounter + 1);
 					child.Parent = node;
 					node.Children.Add(child);
 				} else {

@@ -64,9 +64,9 @@ namespace RoboCup.AtHome.CommandGenerator
         /// </summary>
         /// <param name="tier">The maximum difficulty degree allowed to produce the task</param>
         /// <returns></returns>
-        public TaskNode GenerateTask()
+        public TaskNode GenerateTask(string nonTerminal = "$Main")
 		{
-            TaskNode root = Grammar.GenerateSentence(Rnd);
+            TaskNode root = Grammar.GenerateSentence(nonTerminal, Rnd);
             var locations = new List<Location>();
             locations.AddRange(AllRooms);
             locations.AddRange(AllRooms.SelectMany(t => t.Locations));

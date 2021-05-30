@@ -101,7 +101,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
             {
                 new Option<bool>("--verbose", getDefaultValue: () => true),
                 new Option<int>("--seed", getDefaultValue: () => DateTime.Now.Millisecond),
-                new Option<List<string>>("--grammar"),
+                new Option<List<string>>("--grammars"),
                 new Option<string>("--gestures"),
                 new Option<string>("--locations"),
                 new Option<string>("--names"),
@@ -118,7 +118,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
                 new Option<string>("--output"),
                 new Option<int>("--count", getDefaultValue: () => 20),
                 new Option<int>("--seed", getDefaultValue: () => DateTime.Now.Millisecond),
-                new Option<List<string>>("--grammar"),
+                new Option<List<string>>("--grammars"),
                 new Option<string>("--gestures"),
                 new Option<string>("--locations"),
                 new Option<string>("--names"),

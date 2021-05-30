@@ -10,8 +10,9 @@
             "args": [
                 "interactive",
                 "--seed", "22",
-                "--grammar", "../CommonFiles/CommonRules.txt",
-                "--grammar", "../CommonFiles/EGPSRGrammar.txt"
+                "--grammars",
+                "../CommonFiles/CommonRules.txt",
+                "../CommonFiles/EGPSRGrammar.txt"
             ],
             "cwd": "${workspaceFolder}/GPSRCmdGen",
             "stopAtEntry": false,
