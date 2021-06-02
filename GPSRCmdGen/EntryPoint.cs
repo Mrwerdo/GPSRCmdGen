@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Help;
 using System.CommandLine.Invocation;
+using System.Reflection;
 
 namespace RoboCup.AtHome.GPSRCmdGen
 {
@@ -75,25 +77,34 @@ namespace RoboCup.AtHome.GPSRCmdGen
                 program.Run();
             });
 
-            var root = RootCommand(options =>
+            var root = new RootCommand
             {
-                Console.WriteLine("Help or version.");
-                Console.WriteLine($"Verbose: {options.Verbose}");
+                new Option<bool>("--verbose", getDefaultValue: () => false, description: "Show additional output."),
+                new Option<bool>("--version", description: "Show version information")
+            };
+
+            // Maybe when dotnet's System.CommandLine library improves this won't need to be here.
+            root.Handler = CommandHandler.Create<RootOptions>(options =>
+            {
+                if (options.Version && options.Verbose)
+                {
+                    Console.WriteLine($"{name} {GetAssemblyVersion()}");
+                    Console.WriteLine(longName);
+                }
+                else if (options.Version)
+                {
+                    Console.WriteLine($"{name} {GetAssemblyVersion()}");
+                } else {
+                    var helpBuilder = new HelpBuilder(new System.CommandLine.IO.SystemConsole(), Console.BufferWidth);
+                    helpBuilder.Write(root);
+                }
             });
+
             root.Add(interactive);
             root.Add(bulk);
             root.Add(save);
-            return root.Invoke(args);
-        }
 
-        private static Command RootCommand(Action<RootOptions> handler)
-        {
-            var root = new RootCommand
-            {
-                new Option<bool>("--verbose", getDefaultValue: () => false),
-            };
-            root.Handler = CommandHandler.Create(handler);
-            return root;
+            return root.Invoke(args);
         }
 
         private static Command InteractiveCommand(Action<InteractiveOptions> handler) {
@@ -136,6 +147,13 @@ namespace RoboCup.AtHome.GPSRCmdGen
             };
             save.Handler = CommandHandler.Create(handler);
             return save;
+        }
+
+        private static string GetAssemblyVersion()
+        {
+            var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+            var assemblyVersionAttribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+            return assemblyVersionAttribute?.InformationalVersion ?? assembly.GetName().Version.ToString();
         }
     }
 }

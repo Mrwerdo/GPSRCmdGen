@@ -4,6 +4,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
 {
     public class RootOptions
     {
+        public bool Version { get; set; }
         public bool Verbose { get; set; }
     }
 
