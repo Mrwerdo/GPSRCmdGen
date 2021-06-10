@@ -22,24 +22,33 @@ namespace RoboCup.AtHome.CommandGenerator
                 }
                 return null;
             }
+            string door;
             switch (root.Attributes.Name)
             {
-                case "CountPeople":
-                    var people = root.Find("$peoplege");
-                    var room = root.FindWildcard("room").ReplacementValue;
-                    var gesture = people.FindWildcard("gesture").ReplacementValue;
-                    return $"CountPeople(type: {people.DeepestDecendent().Value}, gesture: {gesture}, location: {room})";
-                case "Open":
-                    // fixme: indexs like this are fragile, replace with a better mechanism.
-                    // This is a problem because information about branch expansion is not maintained.
-                    // See ProductionRule.ExpandBranchExpression
-                    var door = root.Replacement.Index switch {
+                case "Close":
+                    door = root.Replacement.Index switch {
                         0 => "entrance",
                         1 => "exit",
                         2 => "corridor",
                         _ => "unknown",
                     };
-                    return $"Open(door: {door})";
+					return $"Close(door: {door})";
+                case "Open":
+                    door = root.Replacement.Index switch {
+                        0 => "entrance",
+                        1 => "exit",
+                        2 => "corridor",
+                        _ => "unknown",
+                    };
+					return $"Open(door: {door})";
+                case "BringIt":
+					var subject = root.FindWildcard("name")?.ReplacementValue ?? "me";
+                    return $"BringIt(to: {subject})";
+                case "CountPeople":
+                    var people = root.Find("$peoplege");
+                    var room = root.FindWildcard("room").ReplacementValue;
+                    var gesture = people.FindWildcard("gesture").ReplacementValue;
+                    return $"CountPeople(type: {people.DeepestDecendent().Value}, gesture: {gesture}, location: {room})";
                 case "DescribePerson":
                     var posture = root.Find("$posture").DeepestDecendent().Value;
                     var beacon = root.FindWildcard("beacon").ReplacementValue;

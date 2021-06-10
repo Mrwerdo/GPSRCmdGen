@@ -1,0 +1,6 @@
+$Main = $task
+$Main = $task please
+$task = open the (entrance | exit | corridor) door <=> {"Name":"Open"}
+$task = close the (entrance | exit | corridor) door <=> {"Name":"Close"}
+$task = $bring it to (me | {name}) <=> {"Name":"BringIt"}
+$bring = bring | deliver to | give | hand
