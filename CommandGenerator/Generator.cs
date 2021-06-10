@@ -43,6 +43,16 @@ namespace RoboCup.AtHome.CommandGenerator
 		public Grammar Grammar { get; set; }
 
 		public bool Quiet { get; set; }
+
+		public List<Location> AllLocations {
+			get {
+				var locations = new List<Location>();
+				locations.AddRange(AllRooms);
+				locations.AddRange(AllRooms.SelectMany(t => t.Locations));
+				locations.AddRange(AllObjects.Categories.Select(t => t.DefaultLocation).Where(t => !AllRooms.Any(r => r.Name == t.Name)));
+                return locations;
+			}
+		}
 		#endregion
 
 		#region Constructor
@@ -59,31 +69,34 @@ namespace RoboCup.AtHome.CommandGenerator
 
         #endregion
 
-        /// <summary>
-        /// Randomly generates a task with the requested difficulty degree
-        /// </summary>
-        /// <param name="tier">The maximum difficulty degree allowed to produce the task</param>
-        /// <returns></returns>
-        public TaskNode GenerateTask(string nonTerminal = "$Main")
+		private void EvaluateWildcards(TaskNode root)
 		{
-            TaskNode root = Grammar.GenerateSentence(nonTerminal, Rnd);
-            var locations = new List<Location>();
-            locations.AddRange(AllRooms);
-            locations.AddRange(AllRooms.SelectMany(t => t.Locations));
-            locations.AddRange(AllObjects.Categories.Select(t => t.DefaultLocation).Where(t => !AllRooms.Any(r => r.Name == t.Name)));
             var evaluator = new WildcardEvaluator() 
 			{
                 Random = Rnd,
                 Categories = AllObjects.Categories.ShuffleCopy(Rnd),
 				Gestures = AllGestures.ShuffleCopy(Rnd),
-                Locations = locations.ShuffleCopy(Rnd),
+                Locations = AllLocations.ShuffleCopy(Rnd),
 				Names = AllNames.ShuffleCopy(Rnd),
 				Objects = AllObjects.Objects.ShuffleCopy(Rnd),
 				Questions = AllQuestions.ShuffleCopy(Rnd)
 			};
             evaluator.Update(root.Wildcards);
+		}
+
+        public TaskNode GenerateTask(string nonTerminal = "$Main")
+		{
+            TaskNode root = Grammar.GenerateSentence(nonTerminal, Rnd);
+            EvaluateWildcards(root);
             return root;
         }
+
+		public TaskNode GuidedGenerateTask(List<(string token, int? index)> tokens) 
+		{
+            TaskNode root = Grammar.GenerateSentence("$" + tokens.First().token, Rnd, tokens, stackCounter: 0);
+			EvaluateWildcards(root);
+            return root;
+		}
 	}
 }
 

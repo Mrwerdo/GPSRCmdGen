@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+
+#nullable enable
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -38,7 +39,7 @@ namespace RoboCup.AtHome.CommandGenerator
         /// <summary>
         /// Gets or sets the name of the grammar.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Gets the difficulty degree (tier) of the grammar
@@ -105,11 +106,21 @@ namespace RoboCup.AtHome.CommandGenerator
         /// <returns>A replacement string. If the non-terminal symbol does not
         /// belong to the grammar or contains no productions, an empty string
         /// is returned.</returns>
-        private ProductionRule.Replacement FindReplacement(string nonTerminal, Random random)
+        private ProductionRule.Replacement? FindReplacement(string nonTerminal, Random random, List<(string nonTerminal, int? index)>? path, int depth)
         {
             if (!productionRules.ContainsKey(nonTerminal)) return null;
+            if (path is not null)
+            {
+                if (path.Count > depth)
+                {
+					var element = path[depth];
+                    if ("$" + element.nonTerminal == nonTerminal && element.index != null) {
+                        return productionRules[nonTerminal][element.index ?? 0].PickReplacement(random);
+					}
+                }
+            }
             var rule = productionRules[nonTerminal].SelectUniform(random);
-			return rule.PickReplacement(random);
+            return rule.PickReplacement(random);
 		}
 
         /// <summary>
@@ -123,18 +134,18 @@ namespace RoboCup.AtHome.CommandGenerator
         /// When it reach 1000 the production is aborted.</param>
         /// <returns>A string with terminal symbols only</returns>
         /// <remarks>Recursive function</remarks>
-        public TaskNode GenerateSentence(string nonTerminal, Random rnd, int stackCounter = 0)
+        public TaskNode GenerateSentence(string nonTerminal, Random rnd, List<(string nonTerminal, int? index)>? path = null, int stackCounter = 0)
 		{
-			if (++stackCounter > 999)
+			if (stackCounter > 999)
 				throw new StackOverflowException ();
 
             TaskNode node = new(nonTerminal, isNonTerminal: true);
-			node.Replacement = FindReplacement(nonTerminal, rnd);
+            node.Replacement = FindReplacement(nonTerminal, rnd, path, stackCounter);
 			if (node.Replacement == null) return node;
             string[] parts = Scanner.SplitRule(node.Replacement?.Value ?? "");
 			foreach (string part in parts) {
 				if (part.Contains("$")) {
-					TaskNode child = GenerateSentence(part, rnd, stackCounter + 1);
+                    TaskNode child = GenerateSentence(part, rnd, path, stackCounter + 1);
 					child.Parent = node;
 					node.Children.Add(child);
 				} else {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using RoboCup.AtHome.CommandGenerator;
 
 namespace RoboCup.AtHome.GPSRCmdGen
@@ -21,7 +22,9 @@ namespace RoboCup.AtHome.GPSRCmdGen
             string previousLine = "$Main";
             while (true)
             {
-                var (instruction, line) = ReadLine();
+                Console.Write($"{Name} (h => help, q => quit): ");
+                var (instruction, line) = Keyboard.ReadInstructionAndLine();
+                Console.WriteLine();
                 if (instruction == Instruction.Repeat)
                 {
                     instruction = previousInstruction;
@@ -39,7 +42,9 @@ namespace RoboCup.AtHome.GPSRCmdGen
 						h, help => show this help message.
 						c, clear => clear the screen.
 						s <n>, seed <n> => set the seed to integer n.
-						$production, g <production>, generate <production> => generates a sentences starting at <production>.
+						$Main => generates a new random sentence,
+                        $task:13 => uses the 13th task production rule to start.
+                        $task:13 $single:3 => uses the 13th task, and uses the 3rd definition of $single when expanding the $tasks's sentence.
 						");
                         break;
                     case Instruction.GenerateTask:
@@ -56,98 +61,35 @@ namespace RoboCup.AtHome.GPSRCmdGen
                 {
                     previousInstruction = instruction;
                     previousLine = line;
-
                 }
             }
         }
 
         private void SetSeed(string line) 
 		{
-			try {
-				var parts = line.Split(' ');
-                Options.Seed = int.Parse(parts[1]);
-				Console.WriteLine();
-				Console.WriteLine($"Using seed {Options.Seed}");
-				Console.WriteLine();
-			} catch {
+            var seed = Keyboard.ExtractSeed(line);
+            if (seed is not null)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"Using seed {Options.Seed}");
+                Console.WriteLine();
+            }
+            else
+            {
                 Logger.Error("incorrect syntax");
-				Console.WriteLine("Try \"seed 123\"");
-			}
+                Console.WriteLine("syntax: seed <natural number>");
+            }
 		}
 
         private void PrintTree(string line)
         {
-            try
+            var tokens = new List<(string, int?)>(Keyboard.ExtractDollarCommand(line));
+            var task = tokens.Count > 0 ? Generator.GuidedGenerateTask(tokens) : GetTask("$Main");
+            if (task != null)
             {
-                string identifier;
-                if (line.StartsWith('$'))
-                {
-                    identifier = line;
-                }
-                else
-                {
-                    var parts = line.Split(' ');
-					if (parts.Length > 1) {
-                        identifier = parts[1];
-					} else {
-						identifier = "$Main";
-					}
-                }
-                var task = GetTask(identifier);
-                if (task != null)
-                {
-                    PrintTask(task);
-                }
-            }
-            catch
-            {
-                Logger.Error("incorrect syntax");
-                Console.WriteLine("Try \"generate $Main\"");
+                PrintTask(task);
             }
         }
-
-        private enum Instruction {
-			Unknown,
-			Clear,
-			Quit,
-			GenerateTask,
-			Help,
-			SetSeed,
-            Repeat
-		}
-
-        private (Instruction instruction, string line) ReadLine()
-        {
-            Console.Write($"{Name} (h => help, q => quit): ");
-            var line = "";
-			var instruction = Instruction.Unknown;
-            while (instruction == Instruction.Unknown)
-            {
-				ConsoleKeyInfo key = Console.ReadKey();
-                if (key.Key == ConsoleKey.Escape) instruction = Instruction.Quit;
-                else if (line == "")
-                {
-                    if (key.Key == ConsoleKey.Enter) instruction = Instruction.Repeat;
-					else if (key.KeyChar == 'c') instruction = Instruction.Clear;
-                    else if (key.KeyChar == 'q') instruction = Instruction.Quit;
-                    else line += key.KeyChar;
-				} else {
-					if (key.Key == ConsoleKey.Enter) {
-                        // process string command.
-						if (line == "c" || line == "clear") instruction = Instruction.Clear;
-						else if (line == "q" || line == "quit") instruction = Instruction.Quit;
-                        else if (line == "h" || line == "help") instruction = Instruction.Help;
-						else if (line.StartsWith("s") && (line.Split(' ')[0] == "s" || line.Split(' ')[0] == "seed")) instruction = Instruction.SetSeed;
-                        else if (line.StartsWith("$") || line.StartsWith("g") && (line.Split(' ')[0] == "g" || line.Split(' ')[0] == "generate")) instruction = Instruction.GenerateTask;
-                        else break;
-                    } else {
-                        line += key.KeyChar;
-					}
-				}
-			}
-            Console.WriteLine();
-            return (instruction, line);
-		}
 
         private static void PrintTask(TaskNode task)
         {
