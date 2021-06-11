@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
+using Object = RoboCup.AtHome.CommandGenerator.ReplaceableTypes.Object;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -29,9 +30,9 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		public List<PersonName> AllNames { get; set; }
 		/// <summary>
-		/// Stores all known objects
+		/// Stores all known categories and objects.
 		/// </summary>
-		public ObjectManager AllObjects { get; set; }
+		public List<Category> AllCategories { get; set; }
 		/// <summary>
 		/// Stores all known questions
 		/// </summary>
@@ -49,7 +50,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				var locations = new List<Location>();
 				locations.AddRange(AllRooms);
 				locations.AddRange(AllRooms.SelectMany(t => t.Locations));
-				locations.AddRange(AllObjects.Categories.Select(t => t.DefaultLocation).Where(t => !AllRooms.Any(r => r.Name == t.Name)));
+				locations.AddRange(AllCategories.Select(t => t.DefaultLocation).Where(t => !AllRooms.Any(r => r.Name == t.Name)));
                 return locations;
 			}
 		}
@@ -63,7 +64,6 @@ namespace RoboCup.AtHome.CommandGenerator
 		public Generator (int seed)
 		{
             Rnd = new Random(seed);
-            AllObjects = ObjectManager.Instance;
             Quiet = false;
 		}
 
@@ -74,11 +74,11 @@ namespace RoboCup.AtHome.CommandGenerator
             var evaluator = new WildcardEvaluator() 
 			{
                 Random = Rnd,
-                Categories = AllObjects.Categories.ShuffleCopy(Rnd),
+                Categories = AllCategories.ShuffleCopy(Rnd),
 				Gestures = AllGestures.ShuffleCopy(Rnd),
                 Locations = AllLocations.ShuffleCopy(Rnd),
 				Names = AllNames.ShuffleCopy(Rnd),
-				Objects = AllObjects.Objects.ShuffleCopy(Rnd),
+				Objects = AllCategories.SelectMany(c => c.Objects).ToList().ShuffleCopy(Rnd),
 				Questions = AllQuestions.ShuffleCopy(Rnd)
 			};
             evaluator.Update(root.Wildcards);

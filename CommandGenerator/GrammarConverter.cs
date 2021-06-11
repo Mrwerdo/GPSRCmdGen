@@ -18,8 +18,9 @@ namespace RoboCup.AtHome.CommandGenerator
 		private List<Gesture> gestures;
 		private List<Room> rooms;
 		private List<PersonName> names;
-		private readonly ObjectManager objects;
 		private List<PredefinedQuestion> questions;
+		private List<Category> categories;
+		private List<Object> Objects => categories.SelectMany(c => c.Objects).ToList();
 
 		private List<Location> Locations {
 			get {
@@ -30,15 +31,11 @@ namespace RoboCup.AtHome.CommandGenerator
 				return locations;
 			}
 		}
-		//private static 
 
 		/// <summary>
 		/// Initializes a new instance of GrammarConverter
 		/// </summary>
-		private GrammarConverter()
-		{
-			this.objects = ObjectManager.Instance;
-		}
+		private GrammarConverter() { }
 
 		/// <summary>
 		/// Initializes a new instance of GrammarConverter
@@ -64,7 +61,9 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="gestures">List of gesture names</param>
 		/// <param name="names">List of people name</param>
 		/// <param name="questions">List of known questions</param>
-		public static void SaveToSRGS(Grammar grammar, string filePath, List<Gesture> gestures, List<PersonName> names, List<PredefinedQuestion> questions, List<Room> rooms)
+		/// <param name="rooms">List of known rooms</param>
+		/// <param name="categories">List of object categories.</param>
+		public static void SaveToSRGS(Grammar grammar, string filePath, List<Gesture> gestures, List<PersonName> names, List<PredefinedQuestion> questions, List<Room> rooms, List<Category> categories)
 		{
 			if (grammar == null) throw new ArgumentNullException(nameof(grammar));
             GrammarConverter converter = new()
@@ -73,7 +72,8 @@ namespace RoboCup.AtHome.CommandGenerator
                 gestures = gestures,
                 names = names,
                 questions = questions,
-				rooms = rooms
+				rooms = rooms,
+				categories = categories 
             };
 
             converter.ConvertToXmlSRGS(filePath);
@@ -463,7 +463,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				if (loc.IsPlacement && !hsLocations.Contains(loc.Name))
 					hsLocations.Add(loc.Name);
 			}
-			foreach (Category category in objects.Categories)
+			foreach (Category category in categories)
 			{
 				if (category.DefaultLocation.IsPlacement && !hsLocations.Contains(category.DefaultLocation.Name))
 					hsLocations.Add(category.DefaultLocation.Name);
@@ -493,7 +493,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				if (!hsRooms.Contains(room.Name))
 					hsRooms.Add(room.Name);
 			}
-			foreach (Category category in objects.Categories)
+			foreach (Category category in categories)
 			{
 				if (!hsRooms.Contains(category.RoomString))
 					hsRooms.Add(category.RoomString);
@@ -565,7 +565,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		private void SRGSWriteObjectsRules()
 		{
-			if (objects == null)
+			if (Objects == null && categories == null)
 				return;
 
 			writer.WriteStartElement("rule");
@@ -600,7 +600,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteAttributeString("id", "_categories");
 			writer.WriteAttributeString("scope", "private");
 			writer.WriteStartElement("one-of");
-			foreach (Category category in objects.Categories)
+			foreach (Category category in categories)
 			{
 				SRGSWriteItem(category.Name);
 			}
@@ -614,7 +614,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteAttributeString("id", "_aobjects");
 			writer.WriteAttributeString("scope", "private");
 			writer.WriteStartElement("one-of");
-			foreach (Object o in objects.Objects)
+			foreach (Object o in Objects)
 			{
 				if (o.Type != ObjectType.Alike)
 					continue;
@@ -630,7 +630,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteAttributeString("id", "_kobjects");
 			writer.WriteAttributeString("scope", "private");
 			writer.WriteStartElement("one-of");
-			foreach (Object o in objects.Objects)
+			foreach (Object o in Objects)
 			{
 				if (o.Type != ObjectType.Known)
 					continue;
@@ -646,7 +646,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			writer.WriteAttributeString("id", "_sobjects");
 			writer.WriteAttributeString("scope", "private");
 			writer.WriteStartElement("one-of");
-			foreach (Object o in objects.Objects)
+			foreach (Object o in Objects)
 			{
 				if (o.Type != ObjectType.Special)
 					continue;

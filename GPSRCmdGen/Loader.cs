@@ -20,13 +20,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
             var generator = new Generator(Options.Seed);
             try
             {
-                var container = Load<CategoryContainer, Category>("Objects", Options.Objects, Resources.Objects);
-                if (container == null) throw new Exception("No objects found");
-                foreach (var c in container)
-                {
-                    generator.AllObjects.Add(c);
-                }
-
+                generator.AllCategories = Load<CategoryContainer, Category>("Objects", Options.Objects, Resources.Objects);
                 generator.AllNames = Load<NameContainer, PersonName>("Names", Options.Names, Resources.Names);
                 generator.AllRooms = Load<RoomContainer, Room>("Locations", Options.Locations, Resources.Locations);
                 generator.AllGestures = Load<GestureContainer, Gesture>("Gestures", Options.Gestures, Resources.Gestures);
