@@ -6,7 +6,7 @@ namespace RoboCup.AtHome.CommandGenerator
 {
     public class TextWildcard
 	{
-        public WeakReference<Wildcard> AggregateWildcard { get; private set; }
+		public Wildcard AggregateWildcard { get; set; }
 		public TextWildcard Parent { get; set; }
 
 		public string Comment {
@@ -14,16 +14,16 @@ namespace RoboCup.AtHome.CommandGenerator
 				var output = "";
                 if (!string.IsNullOrEmpty(Metadata))
                 {
-                    if (AggregateWildcard.TryGetTarget(out Wildcard wildcard))
+                    if (AggregateWildcard is not null)
                     {
-                        if (string.IsNullOrEmpty(wildcard.Replacement.Name))
+                        if (string.IsNullOrEmpty(AggregateWildcard.Replacement.Name))
                         {
 
                             output += "Remarks\n";
                         }
                         else
                         {
-                            output += wildcard.Replacement.Name + "\n";
+                            output += AggregateWildcard.Replacement.Name + "\n";
                         }
                         output += "\t" + RenderedMetadata() + "\n";
                     }
@@ -41,12 +41,12 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		public string ReplacementValue {
 			get {
-				if (AggregateWildcard.TryGetTarget(out Wildcard wildcard)) 
+				if (AggregateWildcard is not null)
 				{
-					if (Obfuscated && wildcard.Obfuscated != null) {
-						return wildcard.Obfuscated.Name;
+					if (Obfuscated && AggregateWildcard.Obfuscated != null) {
+						return AggregateWildcard.Obfuscated.Name;
 					} else {
-						return wildcard.Replacement?.Name ?? "";
+						return AggregateWildcard.Replacement?.Name ?? "";
 					}
 				} else {
 					return "";
@@ -120,7 +120,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		private TextWildcard() { 
 			Children = new List<TextWildcard>();
-			AggregateWildcard = new WeakReference<Wildcard>(null);
+			AggregateWildcard = null;
 			ParentRange = (-1, -1);
 		}
 
@@ -166,7 +166,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		public override string ToString()
 		{
-			return Value;
+			return Value ?? "";
 		}
 
 		public string RenderedMetadata() 
@@ -190,7 +190,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="w">The string containing nested TextWildcards to parse.</param>
 		private void ParseNestedWildcardsHelper(string s){
 			int cc = 0;
-			s ??= String.Empty;
+			s ??= string.Empty;
 
 			do {
 				while ((cc < s.Length) && (s[cc] != '{')) cc += 1;

@@ -52,7 +52,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		public Wildcard(List<TextWildcard> wildcards) {
 			TextWildcards = wildcards;
 			foreach (var child in wildcards) {
-				child.AggregateWildcard.SetTarget(this);
+                child.AggregateWildcard = this;
 			}
 		}
 

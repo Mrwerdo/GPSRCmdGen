@@ -113,8 +113,8 @@ namespace RoboCup.AtHome.CommandGenerator
 			foreach (var child in w.TextWildcards) {
                 if (child.Parent != null) 
                 {
-                    if (child.Parent.AggregateWildcard.TryGetTarget(out Wildcard p)) {
-						var r = Pronoun.FromWildcard(w, p);
+                    if (child.Parent.AggregateWildcard is not null) {
+						var r = Pronoun.FromWildcard(w, child.Parent.AggregateWildcard);
 						w.Replacement = new NamedTaskElement(r);
 					}
 				}
