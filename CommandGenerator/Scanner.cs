@@ -584,7 +584,7 @@ namespace RoboCup.AtHome.CommandGenerator
             return parts;
         }
 
-		private static readonly Regex nonTerminalIdentifierMatcher = new(@"(\$[0-9A-Za-z_]+)|({.+})");
+		private static readonly Regex nonTerminalIdentifierMatcher = new(@"(\$[0-9A-Za-z_]+)");
 
         /**
 		* Splits a rule , i.e. the right hand side of what this object represents, 

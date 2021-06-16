@@ -11,7 +11,7 @@
                 "interactive",
                 "--seed", "22",
                 "--grammars",
-                "../simple_grammar.txt"
+                "../CommonFiles/EGPSRGrammar.txt"
             ],
             "cwd": "${workspaceFolder}/GPSRCmdGen",
             "stopAtEntry": false,
