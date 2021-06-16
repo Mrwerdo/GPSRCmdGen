@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Xml.Serialization;
 using RoboCup.AtHome.CommandGenerator;
 using RoboCup.AtHome.CommandGenerator.Containers;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
@@ -80,16 +83,62 @@ namespace RoboCup.AtHome.GPSRCmdGen
             Logger.Info($"Loading {resource.Name.ToLower()}...", ' ');
             if (path != null)
             {
-                P obj = CommandGenerator.Loader.LoadObject<P>(path);
+                P obj = LoadObject<P>(path);
                 if (Options.Verbose) Logger.Success("\tDone");
                 return obj.Results;
             }
             else
             {
-                P obj = CommandGenerator.Loader.LoadXmlString<P>(resource.Read());
+                P obj = LoadXmlString<P>(resource.Read());
                 if (Options.Verbose) Logger.Quiet($"\tDefault");
                 return obj.Results;
             }
+        }
+
+        /// <summary>
+        /// Loads an object from a XML file.
+        /// </summary>
+        /// <param name="filePath">The path of the XML file</param>
+        /// <typeparam name="T">The type of object to load.</typeparam>
+        /// <returns>The object in the XML file</returns>
+        private static T LoadObject<T>(string filePath)
+        {
+            T item;
+            using (StreamReader reader = new(filePath, Encoding.UTF8))
+            {
+                XmlSerializer serializer = new(typeof(T));
+                serializer.UnknownAttribute += new XmlAttributeEventHandler(SerializeAttribute);
+                item = (T)serializer.Deserialize(reader);
+                reader.Close();
+
+            }
+            return item;
+        }
+
+        /// <summary>
+        /// Loads an object from a XML string.
+        /// </summary>
+        /// <param name="xml">An XML encoded string</param>
+        /// <typeparam name="T">The type of object to load.</typeparam>
+        /// <returns>The object in the XML string</returns>
+        private static T LoadXmlString<T>(string xml)
+        {
+            T item;
+            using (MemoryStream ms = new(Encoding.UTF8.GetBytes(xml ?? string.Empty)))
+            {
+                XmlSerializer serializer = new(typeof(T));
+                serializer.UnknownAttribute += new XmlAttributeEventHandler(SerializeAttribute);
+                item = (T)serializer.Deserialize(ms);
+                ms.Close();
+
+            }
+            return item;
+        }
+
+        private static void SerializeAttribute(object sender, XmlAttributeEventArgs e)
+        {
+            if (e.ObjectBeingDeserialized is IDescribable desc)
+                desc.Properties.Add(e.Attr.Name, e.Attr.Value);
         }
     }
 }

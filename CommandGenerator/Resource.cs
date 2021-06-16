@@ -16,7 +16,7 @@ namespace RoboCup.AtHome.CommandGenerator {
         public static Resource GPSRGrammar { get; } = new Resource("GPSRGrammar.txt");
         public static Resource CommonRules { get; } = new Resource("CommonRules.txt");
 
-        public string FileName { get; init; }
+        public string FileName { get; private set; }
         public string Name => FileName.Split(".")[0];
 
         public Resource(string filename)
