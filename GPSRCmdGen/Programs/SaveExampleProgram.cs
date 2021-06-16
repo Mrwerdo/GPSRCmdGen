@@ -23,9 +23,9 @@ namespace RoboCup.AtHome.GPSRCmdGen
         {
             CreateDirectoryIfNeeded();
             WriteDatafiles();
-            SaveGrammarFile("EGPSRGrammar", ".txt", Resources.GrammarHeader, Resources.FormatSpecification, Resources.EGPSRGrammar);
-            SaveGrammarFile("GPSRGrammar", ".txt", Resources.GrammarHeader, Resources.FormatSpecification, Resources.GPSRGrammar);
-            SaveGrammarFile("CommonRules", ".txt", Resources.GrammarHeader, Resources.FormatSpecification, Resources.CommonRules);
+            SaveGrammarFile(Resource.EGPSRGrammar);
+            SaveGrammarFile(Resource.GPSRGrammar);
+            SaveGrammarFile(Resource.CommonRules);
         }
 
         /// <summary>
@@ -49,16 +49,17 @@ namespace RoboCup.AtHome.GPSRCmdGen
             return false;
         }
 
-        private void SaveGrammarFile(string name, string ext, string header, string formatSpec, string content)
+        private void SaveGrammarFile(Resource file)
         {
-            var path = GetPath(name + ext);
+            var path = GetPath(file.FileName);
             if (!Overwrite(path))
                 return;
-            header = header.Replace("${GrammarName}", name.Capitalize());
-            using StreamWriter writer = new(path); writer.WriteLine(header);
-            writer.WriteLine(formatSpec);
-            writer.WriteLine(content);
-            writer.Close();
+            var header = Resource.GrammarHeader.Read().Replace("${GrammarName}", file.Name.Capitalize());
+            using (StreamWriter writer = new(path))
+            {
+                writer.WriteLine(header);
+                writer.WriteLine(file.Read());
+            }
             Logger.Info($"Saved {path}");
         }
 
@@ -73,35 +74,24 @@ namespace RoboCup.AtHome.GPSRCmdGen
             return SaveDirectory + "/" + filename;
         }
 
-        /// <summary>
-        /// Writes the default datafiles.
-        /// </summary>
         private void WriteDatafiles()
         {
-            string path = GetPath("Gestures.xml");
-            if (Overwrite(path)) {
-                File.WriteAllText(path, Resources.Gestures);
-                Logger.Info($"Saved {path}");
-            }
-            path = GetPath("Locations.xml");
-            if (Overwrite(path)) {
-                File.WriteAllText(path, Resources.Locations);
-                Logger.Info($"Saved {path}");
-            }
-            path = GetPath("Names.xml");
-            if (Overwrite(path)) {
-                File.WriteAllText(path, Resources.Names);
-                Logger.Info($"Saved {path}");
-            }
-            path = GetPath("Objects.xml");
-            if (Overwrite(path)) {
-                File.WriteAllText(path, Resources.Objects);
-                Logger.Info($"Saved {path}");
-            }
-            path = GetPath("Questions.xml");
-            if (Overwrite(path)) {
-                File.WriteAllText(path, Resources.Questions);
-                Logger.Info($"Saved {path}");
+            var resources = new Resource[] {
+                Resource.Gestures,
+                Resource.Locations,
+                Resource.Names,
+                Resource.Objects,
+                Resource.Questions,
+                Resource.FormatSpecification
+            };
+            foreach (var resource in resources)
+            {
+                string path = GetPath(resource.FileName);
+                if (Overwrite(path))
+                {
+                    File.WriteAllText(path, resource.Read());
+                    Logger.Info($"Saved {path}");
+                }
             }
         }
     }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using RoboCup.AtHome.CommandGenerator;
 using RoboCup.AtHome.CommandGenerator.Containers;
@@ -20,11 +19,11 @@ namespace RoboCup.AtHome.GPSRCmdGen
             var generator = new Generator(Options.Seed);
             try
             {
-                generator.AllCategories = Load<CategoryContainer, Category>("Objects", Options.Objects, Resources.Objects);
-                generator.AllNames = Load<NameContainer, PersonName>("Names", Options.Names, Resources.Names);
-                generator.AllRooms = Load<RoomContainer, Room>("Locations", Options.Locations, Resources.Locations);
-                generator.AllGestures = Load<GestureContainer, Gesture>("Gestures", Options.Gestures, Resources.Gestures);
-                generator.AllQuestions = Load<QuestionsContainer, PredefinedQuestion>("Questions", Options.Questions, Resources.Questions);
+                generator.AllCategories = Load<CategoryContainer, Category>(Options.Objects, Resource.Objects);
+                generator.AllNames = Load<NameContainer, PersonName>(Options.Names, Resource.Names);
+                generator.AllRooms = Load<RoomContainer, Room>(Options.Locations, Resource.Locations);
+                generator.AllGestures = Load<GestureContainer, Gesture>(Options.Gestures, Resource.Gestures);
+                generator.AllQuestions = Load<QuestionsContainer, PredefinedQuestion>(Options.Questions, Resource.Questions);
 
                 Logger.Info("Loading grammars...", ' ');
                 generator.Grammar = LoadGrammars(Options.Grammars);
@@ -38,24 +37,29 @@ namespace RoboCup.AtHome.GPSRCmdGen
             }
         }
 
-        private static Grammar LoadGrammars(IEnumerable<string> Grammars)
+        private static Grammar LoadDefaultGrammar()
         {
             var grammar = new Grammar();
             var loader = new Grammar.GrammarLoader();
-            if (!Grammars.Any())
+            var g = loader.LoadText(Resource.CommonRules.Read().Split('\n'), null, false);
+            foreach (var rule in g.ProductionRules)
             {
-                var g = loader.LoadText(Resources.CommonRules.Split('\n'), null, false);
-				foreach (var rule in g.ProductionRules) 
-				{
-					grammar.AddRule(rule);
-				}
-                g = loader.LoadText(Resources.GPSRGrammar.Split('\n'), null, false);
-				foreach (var rule in g.ProductionRules) 
-				{
-					grammar.AddRule(rule);
-				}
-				grammar.Tier = g.Tier;
-			}
+                grammar.AddRule(rule);
+            }
+            g = loader.LoadText(Resource.GPSRGrammar.Read().Split('\n'), null, false);
+            foreach (var rule in g.ProductionRules)
+            {
+                grammar.AddRule(rule);
+            }
+            grammar.Tier = g.Tier;
+            return g;
+        }
+
+        private static Grammar LoadGrammars(IEnumerable<string> Grammars)
+        {
+            if (!Grammars.Any()) return LoadDefaultGrammar();
+            var grammar = new Grammar();
+            var loader = new Grammar.GrammarLoader();
             foreach (var file in Grammars)
             {
                 var g = loader.Load(file, false);
@@ -63,16 +67,17 @@ namespace RoboCup.AtHome.GPSRCmdGen
                 {
                     grammar.AddRule(rule);
                 }
-				if (g.Tier.CompareTo(grammar.Tier) > 0) {
-					grammar.Tier = g.Tier;
-				}
+                if (g.Tier.CompareTo(grammar.Tier) > 0)
+                {
+                    grammar.Tier = g.Tier;
+                }
             }
             return grammar;
         }
 
-        private List<V> Load<P, V>(string name, string path, string backup) where P : ILoadingContainer<V>
+        private List<V> Load<P, V>(string path, Resource resource) where P : ILoadingContainer<V>
         {
-            Logger.Info($"Loading {name.ToLower()}...", ' ');
+            Logger.Info($"Loading {resource.Name.ToLower()}...", ' ');
             if (path != null)
             {
                 P obj = CommandGenerator.Loader.LoadObject<P>(path);
@@ -81,7 +86,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
             }
             else
             {
-                P obj = CommandGenerator.Loader.LoadXmlString<P>(backup);
+                P obj = CommandGenerator.Loader.LoadXmlString<P>(resource.Read());
                 if (Options.Verbose) Logger.Quiet($"\tDefault");
                 return obj.Results;
             }
