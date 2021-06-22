@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RoboCup.AtHome.CommandGenerator.ReplaceableTypes;
-using Object = RoboCup.AtHome.CommandGenerator.ReplaceableTypes.Object;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -81,7 +80,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				Objects = AllCategories.SelectMany(c => c.Objects).ToList().ShuffleCopy(Rnd),
 				Questions = AllQuestions.ShuffleCopy(Rnd)
 			};
-            evaluator.Update(root.Wildcards);
+            evaluator.Update(root);
 		}
 
         public TaskNode GenerateTask(string nonTerminal = "$Main")

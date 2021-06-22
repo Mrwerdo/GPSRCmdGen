@@ -8,6 +8,7 @@ namespace RoboCup.AtHome.CommandGenerator
 	{
 		public Wildcard AggregateWildcard { get; set; }
 		public TextWildcard Parent { get; set; }
+		public TaskNode Node { get; set; }
 
 		public string Comment {
 			get {

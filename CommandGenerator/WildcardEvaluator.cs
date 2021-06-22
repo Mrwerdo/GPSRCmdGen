@@ -6,9 +6,9 @@ using Object = RoboCup.AtHome.CommandGenerator.ReplaceableTypes.Object;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
-    public class WildcardEvaluator 
-    {
-        public Random Random;
+	public class WildcardEvaluator
+	{
+		public Random Random;
 
 		/// <summary>
 		/// List of available categories
@@ -40,11 +40,13 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		public List<PredefinedQuestion> Questions;
 
-        public WildcardEvaluator() { }
+		public WildcardEvaluator() { }
 
-		public void Update(List<TextWildcard> wildcards) 
+		public void Update(TaskNode node)
 		{
-            var wildcardMap = wildcards.GroupBy(t => t.Keycode).ToDictionary(t => t.Key, e => new Wildcard(e.ToList()));
+			var wildcardMap = node.Wildcards
+				.GroupBy(t => t.Keycode)
+				.ToDictionary(t => t.Key, e => new Wildcard(e.ToList()));
 			foreach (var pair in wildcardMap) {
 				if (pair.Value.Replacement != null) continue;
 				FindReplacement(pair.Value);
@@ -108,40 +110,43 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 		}
 
-        private static void EvaluatePronoun(Wildcard w)
-        {
-			foreach (var child in w.TextWildcards) {
-                if (child.Parent != null) 
-                {
-                    if (child.Parent.AggregateWildcard is not null) {
+		private static void EvaluatePronoun(Wildcard w)
+		{
+			foreach (var child in w.TextWildcards)
+			{
+				if (child.Parent != null)
+				{
+					if (child.Parent.AggregateWildcard is not null)
+					{
 						var r = Pronoun.FromWildcard(w, child.Parent.AggregateWildcard);
 						w.Replacement = new NamedTaskElement(r);
 					}
 				}
 			}
-            // Wildcard prev = null;
-            // string keycode;
-            // string keyword;
-            // for (int i = currentWildcardIx - 1; i >= 0; --i) {
-            // 	keycode = textWildcards [i].Keycode;
-            // 	keyword = wildcards [keycode].Keyword;
-            // 	if ((keyword != null) && keyword.IsAnyOf ("name", "male", "female")) {
-            // 		// prev = textWildcards [i];
-            // 		prev = wildcards [keycode];
-            // 		break;
-            // 	}
-            // }
-            // for (int i = currentWildcardIx - 1; (prev == null) && (i >= 0); --i) {
-            // 	keycode = textWildcards [i].Keycode;
-            // 	keyword = wildcards [keycode].Keyword;
-            // 	if ((keyword != null) && keyword.IsAnyOf ("void", "pron"))
-            // 		continue;
-            // 	// prev = textWildcards [i];
-            // 	prev = wildcards [keycode];
-            // 	break;
-            // }
-            // w.Replacement = new NamedTaskElement(Pronoun.FromWildcard(w, prev));
-			
+			if (w.TextWildcards.Count == 1)
+			{
+				var textWildcard = w.TextWildcards.First();
+				var node = textWildcard.Node;
+				while (node != null)
+				{
+					if (node != null && (node.TextWildcard?.AggregateWildcard?.Keyword.IsAnyOf("name", "male", "female") ?? false))
+					{
+						w.Replacement = new NamedTaskElement(Pronoun.FromWildcard(w, node.TextWildcard.AggregateWildcard));
+						return;
+					}
+					node = node.PreviousNodeInParseTree;
+				}
+				node = textWildcard.Node;
+				while (node != null)
+				{
+					if (node != null && !(node.TextWildcard?.AggregateWildcard?.Keyword.IsAnyOf("void", "pron") ?? false))
+					{
+						w.Replacement = new NamedTaskElement(Pronoun.FromWildcard(w, node.TextWildcard.AggregateWildcard));
+						break;
+					}
+					node = node.PreviousNodeInParseTree;
+				}
+			}
 		}
 
 		/// <summary>
@@ -203,13 +208,13 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
 			if ((w.Name == "name") && String.IsNullOrEmpty(w.Where))
 				w.Keyword = w.Type ?? Random.RandomPick ("male", "female");
-            w.Replacement = w.Keyword switch
-            {
-                "male" => Names.PopFirst(n => n.Gender == Gender.Male, w.Where),
-                "female" => Names.PopFirst(n => n.Gender == Gender.Female, w.Where),
-                _ => !String.IsNullOrEmpty(w.Where) ? Names.PopFirst(w.Where) : Names.PopLast(),
-            };
-            w.Obfuscated = new Obfuscator("a person");
+			w.Replacement = w.Keyword switch
+			{
+				"male" => Names.PopFirst(n => n.Gender == Gender.Male, w.Where),
+				"female" => Names.PopFirst(n => n.Gender == Gender.Female, w.Where),
+				_ => !String.IsNullOrEmpty(w.Where) ? Names.PopFirst(w.Where) : Names.PopLast(),
+			};
+			w.Obfuscated = new Obfuscator("a person");
 		}
 
 		/// <summary>
@@ -221,14 +226,14 @@ namespace RoboCup.AtHome.CommandGenerator
 			if ((w.Name == "object") && String.IsNullOrEmpty(w.Where))
 				w.Keyword = (w.Type == null) ? Random.RandomPick ("kobject", "aobject") : String.Format("{0}object", w.Type[0]);
 
-            w.Replacement = w.Keyword switch
-            {
-                "aobject" => Objects.PopFirst(o => o.Type == ObjectType.Alike, w.Where),
-                "kobject" => Objects.PopFirst(o => o.Type == ObjectType.Known, w.Where),
-                "sobject" => Objects.PopFirst(o => o.Type == ObjectType.Special, w.Where),
-                _ => !String.IsNullOrEmpty(w.Where) ? Objects.PopFirst(w.Where) : Objects.PopLast(),
-            };
-            w.Obfuscated = ((Object)w.Replacement).Category;
+			w.Replacement = w.Keyword switch
+			{
+				"aobject" => Objects.PopFirst(o => o.Type == ObjectType.Alike, w.Where),
+				"kobject" => Objects.PopFirst(o => o.Type == ObjectType.Known, w.Where),
+				"sobject" => Objects.PopFirst(o => o.Type == ObjectType.Special, w.Where),
+				_ => !String.IsNullOrEmpty(w.Where) ? Objects.PopFirst(w.Where) : Objects.PopLast(),
+			};
+			w.Obfuscated = ((Object)w.Replacement).Category;
 		}
 
 		/// <summary>
@@ -240,5 +245,5 @@ namespace RoboCup.AtHome.CommandGenerator
 			w.Replacement = !String.IsNullOrEmpty(w.Where) ? Questions.PopFirst(w.Where) : Questions.PopLast ();
 			w.Obfuscated = new Obfuscator("question");
 		}
-    }
+	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
@@ -33,6 +34,33 @@ namespace RoboCup.AtHome.CommandGenerator
 		}
         public TextWildcard TextWildcard { get; set; }
 
+		/// <summary>
+		/// Finds the next node in the parse tree assuming an inorder traversal from right to left.
+		/// Typically this property would be called after accquiring a leaf node to find its left peer.
+		/// </summary>
+		/// <returns>
+		/// The next leaf node to the left or null if there is none.
+		/// </returns>
+		public TaskNode PreviousNodeInParseTree
+		{
+			get
+			{
+				var index = Parent?.Children.IndexOf(this) ?? -1;
+				if (index > 0)
+				{
+					return Parent?.Children[index - 1].DeepestDecendent(d => d.LastOrDefault());
+				}
+				else if (index == -1)
+				{
+					return null;
+				}
+				else
+				{
+					return Parent?.PreviousNodeInParseTree?.DeepestDecendent(d => d.LastOrDefault());
+				}
+			}
+		}
+
 		public TaskNode(string value, bool isNonTerminal) {
 			Value = value;
 			IsNonTerminal = isNonTerminal;
@@ -42,6 +70,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			if (!IsNonTerminal) {
 				int cc = 0;
                 TextWildcard = TextWildcard.XtractWildcard(Value, ref cc);
+				if (TextWildcard != null) TextWildcard.Node = this;
 			}
 		}
 
