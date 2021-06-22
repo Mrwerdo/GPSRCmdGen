@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace RoboCup.AtHome.CommandGenerator
@@ -48,13 +50,13 @@ namespace RoboCup.AtHome.CommandGenerator
                     var people = root.Find("$peoplege");
                     var room = root.FindWildcard("room").ReplacementValue;
                     var gesture = people.FindWildcard("gesture").ReplacementValue;
-                    return $"CountPeople(type: {people.DeepestDecendent().Value}, gesture: {gesture}, location: {room})";
+                    return $"CountPeople(type: {people.DeepestDecendent(d => d.FirstOrDefault()).Value}, gesture: {gesture}, location: {room})";
                 case "DescribePerson":
-                    var posture = root.Find("$posture").DeepestDecendent().Value;
+                    var posture = root.Find("$posture").DeepestDecendent(d => d.FirstOrDefault()).Value;
                     var beacon = root.FindWildcard("beacon").ReplacementValue;
                     var descper = root.Find("$descper");
-                    var speakTo = descper.Attributes.SpeakTo == null ? "speaker" : $"person at {descper.Attributes.SpeakTo}";
-                    var location = descper.Attributes.Location ?? beacon;
+                    var speakTo = descper.Attributes?.SpeakTo == null ? "speaker" : $"person at {descper.Attributes?.SpeakTo}";
+                    var location = descper.Attributes?.Location ?? beacon;
                     return $"DescribePerson(posture: {posture}, location: {location}, speakingTo: {speakTo})";
                 default:
                     foreach (var child in root.Children)
@@ -68,10 +70,10 @@ namespace RoboCup.AtHome.CommandGenerator
             }
         }
 
-        public static TaskNode DeepestDecendent(this TaskNode node) {
+        public static TaskNode DeepestDecendent(this TaskNode node, Func<IEnumerable<TaskNode>, TaskNode> selector) {
             var child = node;
-            while (true) { 
-                var c = child.Children.FirstOrDefault();
+            while (true) {
+				var c = selector(child.Children);
                 if (c == null) break;
                 child = c;
             }

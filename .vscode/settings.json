@@ -1,5 +1,5 @@
 {
-    "dotnet-test-explorer.testProjectPath": "CommandGenerator",
+    "dotnet-test-explorer.testProjectPath": "*.Tests",
     "dotnet-test-explorer.enableTelemetry": false,
     "omnisharp.enableRoslynAnalyzers": true,
     "omnisharp.organizeImportsOnFormat": true,

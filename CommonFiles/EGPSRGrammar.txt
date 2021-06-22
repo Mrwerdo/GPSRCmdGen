@@ -202,11 +202,17 @@ $whattosay = the day of the (week | month)
 $whattosay = whether you dream or not on electric sheep
 $whattosay = a joke
 
-
-
-
-
-
+$whattosayMeta = {void meta: When asked, reply to the robot: "something about yourself"}
+$whattosayMeta = {void meta: When asked, reply to the robot: "the time"}
+$whattosayMeta = {void meta: When asked, reply to the robot: "what day is today"}
+$whattosayMeta = {void meta: When asked, reply to the robot: "what day is tomorrow"}
+$whattosayMeta = {void meta: When asked, reply to the robot: "your team's name"}
+$whattosayMeta = {void meta: When asked, reply to the robot: "your team's country"}
+$whattosayMeta = {void meta: When asked, reply to the robot: "your team's affiliation"}
+$whattosayMeta = {void meta: When asked, reply to the robot: "the day of the week"}
+$whattosayMeta = {void meta: When asked, reply to the robot: "the day of the month"}
+$whattosayMeta = {void meta: When asked, reply to the robot: "whether you dream or not on electric sheep"}
+$whattosayMeta = {void meta: When asked, reply to the robot: "a joke"}
 
 ####################################################################
 #
@@ -271,7 +277,7 @@ $singleI  = $findprsI
 $singleI  = $findorsI
 $singleI  = $takeI
 $singleI  = $mvobjI
-$singleSpI= (speak | (say something)) {void meta: When asked, reply to the robot: "$whattosay" }
+$singleSpI= (speak | (say something)) $whattosayMeta
 
 # Tasks
 ####################################################################

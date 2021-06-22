@@ -40,7 +40,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		static ProductionRule()
 		{
-			var s = @"\s*(?<name>\$[0-9A-Za-z_]+)\s*=\s*(?<prod>[^<=>]+)(\<\=\>\s*(?<attrib>.+))?";
+			var s = @"\s*(?<name>\$[0-9A-Za-z_]+)\s*=\s*(?:(?<prod>.*)(?:\<\=\>)(?<attrib>.*)|(?<prod>.*))";
 			rxRuleParser = new Regex(s, RegexOptions.Compiled);
 		}
 
@@ -121,12 +121,9 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <returns>A ProductionRule object.</returns>
 		/// <param name="s">the string to analyze</param>
 		public static ProductionRule FromString(string s){
-			Match m = rxRuleParser.Match (s);
-			if (!m.Success)
-				return null;
-			string name = m.Result ("${name}");
-			string prod = m.Result ("${prod}");
-			string attr = m.Result("${attrib}");
+			var result = ExtractParts(s);
+			if (result == null) return null;
+			var (name, prod, attr) = result.Value;
 			ProductionRule pr = new(name);
 			if (attr != null && !attr.Equals("")) {
                 var options = new JsonSerializerOptions() { IgnoreNullValues = true };
@@ -140,6 +137,17 @@ namespace RoboCup.AtHome.CommandGenerator
                 pr.Replacements = new List<string>(replacements);
 			}
 			return pr;
+		}
+
+		public static (string name, string prod, string attr)? ExtractParts(string line)
+		{
+			Match m = rxRuleParser.Match(line);
+			if (!m.Success)
+				return null;
+			string name = m.Result ("${name}");
+			string prod = m.Result ("${prod}");
+			string attr = m.Result("${attrib}");
+			return (name, prod, attr);
 		}
 
         /// <summary>

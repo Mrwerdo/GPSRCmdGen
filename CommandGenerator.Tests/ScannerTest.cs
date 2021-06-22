@@ -18,12 +18,14 @@ namespace RoboCup.AtHome.CommandGenerator.Tests
 			}, result);
 		}
 
-		[Fact]
-		public void DoesNothing()
+		[Theory]
+		[InlineData("$Main")]
+		[InlineData("Main")]
+		[InlineData("{object where Category=\"tableware\"}")]
+		public void DoesNothing(string input)
 		{
-			var input = "$Main";
 			var result = Scanner.SplitRule(input);
-			Assert.Equal(new string[] { "$Main" }, result);
+			Assert.Equal(new string[] { input }, result);
 		}
 
 		[Fact]
@@ -49,6 +51,17 @@ namespace RoboCup.AtHome.CommandGenerator.Tests
 				"$vbfind",
 				" ",
 				"{name meta: {pron sub} is standing at the {beacon}}"
+			}, result);
+		}
+
+		[Fact]
+		public void ContainsProductionInsideWildcard()
+		{
+			var input = "say something {void meta: When asked, reply to the robot: \"$whattosay\" }";
+			var result = Scanner.SplitRule(input);
+			Assert.Equal(new string[] {
+				"say something ",
+				"{void meta: When asked, reply to the robot: \"$whattosay\" }",
 			}, result);
 		}
 	}

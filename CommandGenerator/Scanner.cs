@@ -592,30 +592,43 @@ namespace RoboCup.AtHome.CommandGenerator
 		* or is literal text.
 		*/
         public static string[] SplitRule(string rule) {
-			List<Match> matches = nonTerminalIdentifierMatcher.Matches(rule).Cast<Match>().ToList();
-			if (matches.Count == 0) {
-				return new string[] { rule };
-			}
-			var tokens = new List<string>();
-			var first = matches.First();
-			if (first.Index != 0) {
-				tokens.Add(rule.Substring(0, first.Index));
-			}
-			tokens.Add(rule.Substring(first.Index, first.Length));
-			int nextIndex = first.Index + first.Length;
-			foreach (Match m in matches.Skip(1)) {
-				if (nextIndex != m.Index) {
-					tokens.Add(rule[nextIndex..m.Index]);
+			List<string> tokens = new();
+			var literalText = "";
+			for (int index = 0; index < rule.Length; index += 1)
+			{
+				if (rule[index] == '{') {
+					if (literalText != "") {
+						tokens.Add(literalText);
+						literalText = "";
+					}
+					int endIndex = index + 1;
+					if (FindClosingPair(rule, ref endIndex, '{', '}')) {
+						tokens.Add(rule[index..(endIndex+1)]);
+						index = endIndex;
+						continue;
+					} else {
+						return null;
+					}
+				} else if (rule[index] == '$') {
+					if (literalText != "") {
+						tokens.Add(literalText);
+						literalText = "";
+					}
+					int endIndex = index + 1;
+					if (XtractIdentifier(rule, ref endIndex, out string value))
+					{
+						tokens.Add(rule[index..endIndex]);
+						index = endIndex-1;
+						continue;
+					}
+				} else {
+					literalText += rule[index];
 				}
-				tokens.Add(rule.Substring(m.Index, m.Length));
-				nextIndex = m.Index + m.Length;
 			}
-			if (nextIndex != rule.Length) {
-				tokens.Add(rule[nextIndex..]);
+			if (literalText != "") {
+				tokens.Add(literalText);
 			}
-            return tokens.SelectMany(t => {
-                return FindParenthesisRanges(t, '{', '}').Select(r => t[r.Start..(r.End+1)]);
-            }).ToArray();
+			return tokens.ToArray();
 		}
     }
 }

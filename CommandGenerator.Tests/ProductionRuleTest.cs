@@ -100,5 +100,34 @@ namespace RoboCup.AtHome.CommandGenerator.Tests
             var result = Scanner.SplitRespectingParenthesis("a | (b | c) d | e", '(', ')', '|');
             Assert.Equal(new string[] { "a ", " (b | c) d ", " e" }, result);
         }
+
+        [Theory]
+        [InlineData("$pourable = {object where canPour=true}")]
+        [InlineData("$snack = {object where Category=\"snacks\"}")]
+        [InlineData("$fruit = {object where fruit=true}")]
+        [InlineData("$drink = {object where Category=\"drinks\"}")]
+        [InlineData("$storage = microwave | fridge | oven | {object special where canPlaceIn=true} on the {placement}")]
+        [InlineData("$tableware = {object where Category=\"tableware\"}")]
+        [InlineData("$cutlery = {object where Category=\"cutlery\"}")]
+        [InlineData("$rpos = left | right | center | middle bottom | top")]
+        [InlineData("$desc = $color | biggest | smallest | tallest | (left-most) | (right-most)")]
+        [InlineData("$color = blue | yellow | black | white | red | orange | gray")]
+        [InlineData("$repwho = me")]
+        [InlineData("$room = {room 1 meta: At least three people must be here}")]
+        [InlineData("$Main = $task")]
+        public void RexgexParser(string input) {
+			var (name, prod, _) = ProductionRule.ExtractParts(input).Value;
+            var output = $"{name} = {prod}";
+			Assert.Equal(output, input);
+        }
+
+        [Theory]
+        [InlineData("$canpourin = {object where canPourIn=true} <=> {\"Name\":\"CanPour\"}")]
+        [InlineData("$cereal = {object where Category=\"food\" canPour=true} <=>")]
+        public void RexgexParserWithAttributes(string input) {
+			var (name, prod, attr) = ProductionRule.ExtractParts(input).Value;
+			var output = $"{name} = {prod}<=>{attr}";
+			Assert.Equal(output, input);
+        }
     }
 }
