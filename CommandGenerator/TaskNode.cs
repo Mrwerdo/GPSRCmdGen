@@ -17,21 +17,13 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		public string Value { get; set; }
 		public bool IsNonTerminal { get; set; }
-		public ProductionRuleAttributes Attributes 
+		public string AlternativeExpression
 		{ 
 			get {
-				if (Rule == null) { return null; }
-				return Rule.Attributes;
+				return Replacement?.Rule?.AlternativeExpression;
 			}
 		}
         public ProductionRule.Replacement Replacement { get; set; }
-		public ProductionRule Rule 
-		{
-			get {
-				if (Replacement == null) return null;
-				return Replacement.Rule;
-			}
-		}
         public TextWildcard TextWildcard { get; set; }
 
 		/// <summary>
@@ -107,9 +99,6 @@ namespace RoboCup.AtHome.CommandGenerator
 			string idt = new('.', indent * 2);
 			if (IsNonTerminal) {
 				output += idt + "-> " + Value;
-				if (Replacement != null && Replacement.Rule.Attributes != null) {
-					output += Replacement.Rule.Attributes.ToString().Indent(indent);
-				}
 				if (Children.Count > 0) {
 					output += "\n";
 				}
@@ -143,7 +132,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				output += "\nParse tree:\n";
 				output += PrettyTree() + "\n\n";
 				output += "Command:\n";
-				output += this.RenderCommand();
+				output += this.RenderCommand() ?? "";
 			}
 			return output + "\n";
 		}

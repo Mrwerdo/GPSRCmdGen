@@ -235,7 +235,7 @@ namespace RoboCup.AtHome.CommandGenerator
 						}
 					}
 					// Single character commenting
-					else if ((lines [i] [j] == '#') || (lines [i] [j] == ';') || (lines [i] [j] == '%')) {
+					else if ((lines [i] [j] == '#') || (lines [i] [j] == ';')) {
 						ParseSingleLineComment (lines[i], j);
 						lines [i] = lines [i].Substring (0, j);
 						break;

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace RoboCup.AtHome.CommandGenerator
@@ -28,9 +27,7 @@ namespace RoboCup.AtHome.CommandGenerator
         /// Gets the right side of the production rule (List of productions).
         /// </summary>
         public List<string> Replacements { get; private set; }
-
-
-        public ProductionRuleAttributes Attributes { get; set; }
+		public string AlternativeExpression { get; private set; }
         #endregion
 
 		#region Constructors
@@ -40,7 +37,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		static ProductionRule()
 		{
-			var s = @"\s*(?<name>\$[0-9A-Za-z_]+)\s*=\s*(?:(?<prod>.*)(?:\<\=\>)(?<attrib>.*)|(?<prod>.*))";
+			var s = @"\s*(?<name>\$[0-9A-Za-z_]+)\s*=\s*(?:(?<prod>.*)(?:\=\>)(?<attrib>.*)|(?<prod>.*))";
 			rxRuleParser = new Regex(s, RegexOptions.Compiled);
 		}
 
@@ -126,8 +123,7 @@ namespace RoboCup.AtHome.CommandGenerator
 			var (name, prod, attr) = result.Value;
 			ProductionRule pr = new(name);
 			if (attr != null && !attr.Equals("")) {
-                var options = new JsonSerializerOptions() { IgnoreNullValues = true };
-                pr.Attributes = JsonSerializer.Deserialize<ProductionRuleAttributes>(attr, options);
+				pr.AlternativeExpression = attr;
 			}
 			var replacements = ExpandBranchExpression(prod);
 			if (replacements == null) {

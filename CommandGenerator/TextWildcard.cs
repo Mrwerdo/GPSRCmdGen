@@ -55,12 +55,12 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 		}
 
-		#region Variables
+        #region Variables
 
-		/// <summary>
-		/// Stores the Wildcard id
-		/// </summary>
-		private int id;
+        /// <summary>
+        /// Stores the Wildcard id
+        /// </summary>
+        public int Id { get; private set; }
 
 		/// <summary>
 		/// Stores the
@@ -136,11 +136,11 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// </summary>
 		public string Keycode
 		{
-			get{ return Name + id.ToString().PadLeft(4, '0'); }
+			get{ return Name + Id.ToString().PadLeft(4, '0'); }
 		}
 
 		public void SetId(int value) {
-            id = (value < 0) ? nextAutoId++ : value;
+            Id = (value < 0) ? nextAutoId++ : value;
 		}
 
         /// <summary>

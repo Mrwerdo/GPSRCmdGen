@@ -122,11 +122,11 @@ namespace RoboCup.AtHome.CommandGenerator.Tests
         }
 
         [Theory]
-        [InlineData("$canpourin = {object where canPourIn=true} <=> {\"Name\":\"CanPour\"}")]
-        [InlineData("$cereal = {object where Category=\"food\" canPour=true} <=>")]
+        [InlineData("$canpourin = {object where canPourIn=true} => {\"Name\":\"CanPour\"}")]
+        [InlineData("$cereal = {object where Category=\"food\" canPour=true} =>")]
         public void RexgexParserWithAttributes(string input) {
 			var (name, prod, attr) = ProductionRule.ExtractParts(input).Value;
-			var output = $"{name} = {prod}<=>{attr}";
+			var output = $"{name} = {prod}=>{attr}";
 			Assert.Equal(output, input);
         }
     }

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+#nullable enable
+
 namespace RoboCup.AtHome.CommandGenerator
 {
 	/// <summary>
@@ -9,64 +11,78 @@ namespace RoboCup.AtHome.CommandGenerator
 	/// </summary>
 	public static class TaskNodeCommandRenderer
 	{
-
-        public static string RenderCommand(this TaskNode root)
+        public static string? RenderCommand(this TaskNode root)
         {
-            if (!root.IsNonTerminal) {
-                return null;
-            }
-            if (root.Attributes == null) {
-                foreach (var child in root.Children) {
-                    var result = RenderCommand(child);
-                    if (result != null) {
-                        return result;
+            if (root.AlternativeExpression is not null) {
+                string[] parts = Scanner.SplitRule(root.AlternativeExpression.Trim(), "$%", "$:");
+                var result = "";
+                foreach (string part in parts) {
+                    if (part.StartsWith("$")) {
+                        result += root.ParseNodePath(part).Render();
+                    } else if (part.StartsWith("%")) {
+                        var node = root.ParseNodePath("$" + part.TrimStart('%'));
+                        result += RenderCommand(node) ?? throw new Exception($"Failed to render path: {part}");
+                    } else if (part.StartsWith("{")) {
+                        var p = part.TrimStart('{').TrimEnd('}').Split(' ');
+                        if (p.Length == 2) {
+                            var name = p[0];
+                            var id = int.Parse(p[1]);
+                            result += root.FindWildcard(name, id)?.ReplacementValue ?? throw new Exception($"Could not find wildcard named: {name}, with id: {id}");
+                        } else if (p.Length == 1) {
+                            result += root.FindWildcard(p[0])?.ReplacementValue ?? throw new Exception($"Could not find wildcard named: {p[0]}");
+                        } else {
+                            throw new Exception($"Invalid syntax: {{{part}}}");
+                        }
+                    } else {
+                        result += part;
                     }
                 }
-                return null;
+                return result;
+            } else {
+                var nodes = root.Children.Where(t => t.AlternativeExpression is not null);
+                if (nodes.Count() > 1) {
+                    throw new Exception("Cannot render command. The alternative expression is ambiguous.");
+                } else if (nodes.Count() == 1) {
+                    return RenderCommand(nodes.First());
+                } else {
+                    throw new Exception($"Could not find expression to render node: {root.Value}");
+                }
             }
-            string door;
-            switch (root.Attributes.Name)
-            {
-                case "Close":
-                    door = root.Replacement.Index switch {
-                        0 => "entrance",
-                        1 => "exit",
-                        2 => "corridor",
-                        _ => "unknown",
-                    };
-					return $"Close(door: {door})";
-                case "Open":
-                    door = root.Replacement.Index switch {
-                        0 => "entrance",
-                        1 => "exit",
-                        2 => "corridor",
-                        _ => "unknown",
-                    };
-					return $"Open(door: {door})";
-                case "BringIt":
-					var subject = root.FindWildcard("name")?.ReplacementValue ?? "me";
-                    return $"BringIt(to: {subject})";
-                case "CountPeople":
-                    var people = root.Find("$peoplege");
-                    var room = root.FindWildcard("room").ReplacementValue;
-                    var gesture = people.FindWildcard("gesture").ReplacementValue;
-                    return $"CountPeople(type: {people.DeepestDecendent(d => d.FirstOrDefault()).Value}, gesture: {gesture}, location: {room})";
-                case "DescribePerson":
-                    var posture = root.Find("$posture").DeepestDecendent(d => d.FirstOrDefault()).Value;
-                    var beacon = root.FindWildcard("beacon").ReplacementValue;
-                    var descper = root.Find("$descper");
-                    var speakTo = descper.Attributes?.SpeakTo == null ? "speaker" : $"person at {descper.Attributes?.SpeakTo}";
-                    var location = descper.Attributes?.Location ?? beacon;
-                    return $"DescribePerson(posture: {posture}, location: {location}, speakingTo: {speakTo})";
-                default:
-                    foreach (var child in root.Children)
-                    {
-                        var result = RenderCommand(child);
-                        if (result != null) {
-                            return result;
-                        }
+        }
+
+        private static TaskNode ParseNodePath(this TaskNode node, string path)
+        {
+            var parts = path.Split("$", StringSplitOptions.RemoveEmptyEntries);
+            var current = node;
+            foreach (var part in parts) {
+                (string identifier, int? index) = GetIdentifierAndIndex(part);
+                var children = current.Children.Where(t => t.Value == "$" + identifier);
+                if (index is not null) {
+                    if (children.Count() <= index) {
+                        throw new Exception($"Out of bounds index. The node only has {children.Count()} children, but the path \"{path}\" attempted to access index {index}.");
+                    } else {
+                        current = children.ElementAt(index.Value);
                     }
-                    return null;
+                } else if (children.Count() > 1) {
+                    throw new Exception($"Selecting the node {part} in the path {path} is ambiguous. Specify a child index to fix this (e.g. \"{part}:0\")");
+                } else if (children.Count() == 1) {
+                    current = children.First();
+                } else {
+                    throw new Exception($"\"{path}\" is attempting to access the children of leaf node {part}.");
+                }
+            }
+            return current;
+        }
+        
+        private static (string identifier, int? index) GetIdentifierAndIndex(string part) {
+            var p = part.Split(":");
+            if (p.Length == 2) {
+                var index = int.Parse(p[1]);
+                return (p[0], index);
+            } else if (p.Length == 1) {
+                return (p[0], null);
+            } else {
+                throw new Exception($"Invalid path syntax: \"{part}\"");
             }
         }
 
@@ -80,9 +96,19 @@ namespace RoboCup.AtHome.CommandGenerator
             return child;
         }
 
-        public static TextWildcard Find(this TextWildcard wildcard, string name)
+        public static TextWildcard? Find(this TextWildcard wildcard, string name, int? id = null)
         {
-            if (wildcard.Name == name) return wildcard;
+            if (wildcard.Name == name) {
+                if (id is not null) {
+                    if (id == wildcard.Id) {
+                        return wildcard;
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return wildcard;
+                }
+            }
             foreach (var child in wildcard.Children)
             {
                 var result = child.Find(name);
@@ -91,24 +117,13 @@ namespace RoboCup.AtHome.CommandGenerator
             return null;
         }
 
-        public static TextWildcard FindWildcard(this TaskNode node, string name) 
+        public static TextWildcard? FindWildcard(this TaskNode node, string name, int? id = null) 
         {
-            var tw = node.TextWildcard?.Find(name);
+            var tw = node.TextWildcard?.Find(name, id);
             if (tw != null) return tw;
             foreach (var child in node.Children)
             {
                 var result = FindWildcard(child, name);
-                if (result != null) return result;
-            }
-            return null;
-        }
-
-        public static TaskNode Find(this TaskNode node, string nonTerminal) 
-        {
-            if (node.IsNonTerminal && node.Value == nonTerminal) return node;
-            foreach (var child in node.Children)
-            {
-                var result = Find(child, nonTerminal);
                 if (result != null) return result;
             }
             return null;

@@ -231,19 +231,20 @@ namespace RoboCup.AtHome.CommandGenerator
 		/// <param name="cc">The search starting position</param>
 		/// <param name="value">When this method returns contains a valid C-like identifier found in s if the extraction succeded, or null if the extraction failed.</param>
 		/// <returns>True if the extraction succeded and a C-like identifier was found in s starting at cc, false otherwise</returns>
-		public static bool XtractIdentifier(string input, ref int cc, out string value)
+		public static bool XtractIdentifier(string input, ref int cc, out string value, string extraChars = "")
 		{
 			value = null;
 			if (cc >= input.Length)
 				return false;
 
 			int bcc = cc;
-			if ((input[cc] != '_') && !IsAlpha(input[cc]))
+			if (input[cc] != '_' && !IsAlpha(input[cc]))
 				return false;
 
+            string chars = "_" + extraChars;
 			do {
 				++cc;
-			} while ((cc < input.Length) && (IsAlNum(input[cc]) || (input[cc] == '_')));
+            } while ((cc < input.Length) && (IsAlNum(input[cc]) || chars.Contains(input[cc])));
 			value = input[bcc..cc];
 			return true;
 		}
@@ -591,7 +592,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		* into a list of strings, where each string either starts with $, starst with {, ends with } and has balance braces,
 		* or is literal text.
 		*/
-        public static string[] SplitRule(string rule) {
+        public static string[] SplitRule(string rule, string identifierPrefix = "$", string extraIdentifierChars = "") {
 			List<string> tokens = new();
 			var literalText = "";
 			for (int index = 0; index < rule.Length; index += 1)
@@ -609,13 +610,13 @@ namespace RoboCup.AtHome.CommandGenerator
 					} else {
 						return null;
 					}
-				} else if (rule[index] == '$') {
+				} else if (identifierPrefix.Contains(rule[index])) {
 					if (literalText != "") {
 						tokens.Add(literalText);
 						literalText = "";
 					}
 					int endIndex = index + 1;
-					if (XtractIdentifier(rule, ref endIndex, out string value))
+                    if (XtractIdentifier(rule, ref endIndex, out string value, extraIdentifierChars))
 					{
 						tokens.Add(rule[index..endIndex]);
 						index = endIndex-1;
