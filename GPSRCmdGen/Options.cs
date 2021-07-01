@@ -33,4 +33,11 @@ namespace RoboCup.AtHome.GPSRCmdGen
         public bool Verbose { get; set; }
         public bool? Overwrite { get; set; }
     }
+
+    public class CreateDatasetOptions: Options
+    {
+        public string Path { get; set; }
+        public bool? Overwrite { get; set; }
+        public int? Limit { get; set; }
+    }
 }

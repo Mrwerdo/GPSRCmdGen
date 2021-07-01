@@ -96,6 +96,14 @@ namespace RoboCup.AtHome.CommandGenerator
 			EvaluateWildcards(root);
             return root;
 		}
+
+		public IEnumerable<TaskNode> GetEverythingEnumerator(string nonTerminal = "$Main")
+		{
+			foreach (TaskNode root in Grammar.EverythingEnumerator(nonTerminal)) {
+				EvaluateWildcards(root);
+				yield return root;
+			}
+		}
 	}
 }
 

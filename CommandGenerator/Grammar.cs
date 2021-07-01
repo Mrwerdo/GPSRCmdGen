@@ -76,27 +76,6 @@ namespace RoboCup.AtHome.CommandGenerator
 			productionRules[rule.NonTerminal].Add(rule);
 		}
 
-		/// <summary>
-		/// Retrieves the non-terminal symbol within the input string pointed by cc
-		/// </summary>
-		/// <param name="s">S.</param>
-		/// <param name="cc">A read header that points to the first character at
-		/// the right of.</param>
-		/// <returns>The non-terminal symbol found.</returns>
-		private static string FetchNonTerminal (string s, ref int cc)
-		{
-			char c;
-			int bcc = cc++;
-			while (cc < s.Length) {
-				c = s [cc];
-				if (((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z')) || (c == '_') )
-					++cc;
-				else
-					break;
-			}
-			return s[bcc..cc];
-		}
-
         /// <summary>
         /// Gets a random replacement for the provided non-terminal symbol.
         /// </summary>
@@ -155,6 +134,34 @@ namespace RoboCup.AtHome.CommandGenerator
 				}
 			}
 			return node;
+		}
+
+		public IEnumerable<TaskNode> EverythingEnumerator(string nonTerminal)
+		{
+			var rules = productionRules[nonTerminal];
+			foreach (var rule in rules) {
+				for (int index = 0; index < rule.Replacements.Count; index++) {
+					var replacement = new ProductionRule.Replacement() {
+						Rule = rule,
+						NonTerminal = rule.NonTerminal,
+						Value = rule.Replacements[index],
+						Index = index
+					};
+					string[] parts = Scanner.SplitRule(replacement.Value ?? "");
+					List<List<TaskNode>> iterators = parts.Select(p => {
+						if (p.StartsWith("$")) {
+							return EverythingEnumerator(p).ToList();
+						} else {
+							return new() { new TaskNode(p, isNonTerminal: false) };
+						}
+					}).ToList();
+					var ways = Combinatorics.EnumerateReplacementsOfOrderedList(iterators);
+					foreach (TaskNode[] way in ways)
+					{
+						yield return new(nonTerminal, isNonTerminal: true, children: way.ToList());
+					}
+				}
+			}
 		}
 
 		/// <summary>

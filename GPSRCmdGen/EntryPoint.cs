@@ -77,6 +77,26 @@ namespace RoboCup.AtHome.GPSRCmdGen
                 program.Run();
             });
 
+            var createDataset = CreateDatasetCommand(options => {
+                var logger = new Logger(options.Verbose);
+
+                var loader = new Loader()
+                {
+                    Logger = logger,
+                    Options = options
+                };
+
+                var generator = loader.LoadGenerator();
+                if (generator == null) return;
+                var program = new CreateDatasetProgram()
+                {
+                    Logger = logger,
+                    Options = options,
+                    Generator = generator
+                };
+                program.Run();
+            });
+
             var root = new RootCommand
             {
                 new Option<bool>("--verbose", getDefaultValue: () => false, description: "Show additional output."),
@@ -103,6 +123,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
             root.Add(interactive);
             root.Add(bulk);
             root.Add(save);
+            root.Add(createDataset);
 
             return root.Invoke(args);
         }
@@ -147,6 +168,23 @@ namespace RoboCup.AtHome.GPSRCmdGen
             };
             save.Handler = CommandHandler.Create(handler);
             return save;
+        }
+
+        private static Command CreateDatasetCommand(Action<CreateDatasetOptions> handler) {
+            var createDataset = new Command("create-dataset") {
+                new Option<string>("--path", getDefaultValue: () => "dataset.csv"),
+                new Option<bool?>("--overwrite", getDefaultValue: () => null),
+                new Option<int?>("--limit", getDefaultValue: () => null),
+                new Option<int>("--seed", getDefaultValue: () => DateTime.Now.Millisecond),
+                new Option<List<string>>("--grammars"),
+                new Option<string>("--gestures"),
+                new Option<string>("--locations"),
+                new Option<string>("--names"),
+                new Option<string>("--objects"),
+                new Option<string>("--questions")
+            };
+            createDataset.Handler = CommandHandler.Create(handler);
+            return createDataset;
         }
 
         private static string GetAssemblyVersion()

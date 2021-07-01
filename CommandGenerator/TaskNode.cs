@@ -53,16 +53,20 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 		}
 
-		public TaskNode(string value, bool isNonTerminal) {
+		public TaskNode(string value, bool isNonTerminal, List<TaskNode> children = null) {
 			Value = value;
 			IsNonTerminal = isNonTerminal;
 			Parent = null;
-			Children = new List<TaskNode>();
+			Children = children ?? new();
 
 			if (!IsNonTerminal) {
 				int cc = 0;
                 TextWildcard = TextWildcard.XtractWildcard(Value, ref cc);
 				if (TextWildcard != null) TextWildcard.Node = this;
+			}
+
+			foreach (var child in Children) {
+                child.Parent = this;
 			}
 		}
 
