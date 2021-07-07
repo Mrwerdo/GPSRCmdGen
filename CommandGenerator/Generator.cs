@@ -92,7 +92,7 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		public TaskNode GuidedGenerateTask(List<(string token, int? index)> tokens) 
 		{
-            TaskNode root = Grammar.GenerateSentence("$" + tokens.First().token, Rnd, tokens, stackCounter: 0);
+            TaskNode root = Grammar.GenerateSentence("$" + tokens.First().token, Rnd, tokens, depth: 0);
 			EvaluateWildcards(root);
             return root;
 		}

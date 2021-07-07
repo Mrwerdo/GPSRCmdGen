@@ -14,19 +14,26 @@ namespace RoboCup.AtHome.CommandGenerator
 
 		The length N is deduced by the length of the argument.
 		*/
-		public static IEnumerable<T[]> EnumerateReplacementsOfOrderedList<T>(List<List<T>> sequences)
+		public static IEnumerable<T[]> EnumerateReplacementsOfOrderedList<T>(List<IEnumerable<T>> sequences)
 		{
 			int n = sequences.Count;
-			int[] lengths = sequences.Select(s => s.Count).ToArray();
+			IEnumerator<T>[] enumerators = sequences.Select(s => s.GetEnumerator()).ToArray();
 			int[] indices = new int[n];
 			T[] result = new T[n];
 			int index = 0;
 
+			foreach (IEnumerator<T> e in enumerators) {
+				if (!e.MoveNext()) {
+					throw new Exception("an empty sequence does not make sense!");
+				}
+			}
+
 			while (true) {
-				result[index] = sequences.ElementAt(index).ElementAt(indices[index]);
+				IEnumerator<T> currentEnumerator = enumerators[index];
+				result[index] = currentEnumerator.Current;
 				if (index + 1 == n) {
 					yield return result;
-					if (IncrementIndices(lengths, indices, ref index)) {
+					if (IncrementIndices(sequences, enumerators, ref index)) {
 						break;
 					}
 				} else {
@@ -35,18 +42,18 @@ namespace RoboCup.AtHome.CommandGenerator
 			}
 		}
 		
-		public static bool IncrementIndices(int[] lengths, int[] indices, ref int index) {
+		public static bool IncrementIndices<T>(List<IEnumerable<T>> sequences, IEnumerator<T>[] enumerators, ref int index) {
 			while (true) {
-				if (indices[index] + 1 == lengths[index]) {
+				if (!enumerators[index].MoveNext()) {
 					// We have yielded the last result for this index.
-					indices[index] = 0;
+					enumerators[index] = sequences.ElementAt(index).GetEnumerator();
+					enumerators[index].MoveNext();
 					if (index > 0) {
 						index -= 1;
 					} else {
 						return true;
 					}
 				} else {
-					indices[index] += 1;
 					return false;
 				}
 			}

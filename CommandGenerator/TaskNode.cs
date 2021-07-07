@@ -23,8 +23,8 @@ namespace RoboCup.AtHome.CommandGenerator
 				return Replacement?.Rule?.AlternativeExpression;
 			}
 		}
-        public ProductionRule.Replacement Replacement { get; set; }
-        public TextWildcard TextWildcard { get; set; }
+		public ProductionRule.Replacement Replacement { get; set; }
+		public TextWildcard TextWildcard { get; set; }
 
 		/// <summary>
 		/// Finds the next node in the parse tree assuming an inorder traversal from right to left.
@@ -61,12 +61,14 @@ namespace RoboCup.AtHome.CommandGenerator
 
 			if (!IsNonTerminal) {
 				int cc = 0;
-                TextWildcard = TextWildcard.XtractWildcard(Value, ref cc);
+				TextWildcard = TextWildcard.XtractWildcard(Value, ref cc);
 				if (TextWildcard != null) TextWildcard.Node = this;
 			}
 
 			foreach (var child in Children) {
-                child.Parent = this;
+				if (child != null) {
+					child.Parent = this;
+				}
 			}
 		}
 
@@ -89,10 +91,10 @@ namespace RoboCup.AtHome.CommandGenerator
 		private string RenderPrivate() {
 			string output = "";
 			if (IsNonTerminal) {
-                output += string.Join(" ", Children.ConvertAll(t => t.RenderPrivate()));
+				output += string.Join(" ", Children.ConvertAll(t => t.RenderPrivate()));
 			} else if (TextWildcard != null) {
 				output += TextWildcard.ReplacementValue;
-            } else {
+			} else {
 				output += Value;
 			}
 			return output;
@@ -130,7 +132,7 @@ namespace RoboCup.AtHome.CommandGenerator
 		{
 			var output = "";
 			EnumerateTree(t => {
-                output += t.TextWildcard?.Comment ?? "";
+				output += t.TextWildcard?.Comment ?? "";
 			});
 			if (extra) {
 				output += "\nParse tree:\n";
@@ -138,7 +140,7 @@ namespace RoboCup.AtHome.CommandGenerator
 				output += "Command:\n";
 				output += this.RenderCommand() ?? "";
 			}
-			return output + "\n";
+			return output == "" ? null : output + "\n";
 		}
 
 		public void EnumerateTree(Action<TaskNode> callback) {
@@ -147,5 +149,5 @@ namespace RoboCup.AtHome.CommandGenerator
 				child.EnumerateTree(callback);
 			}
 		}
-    }
+	}
 }

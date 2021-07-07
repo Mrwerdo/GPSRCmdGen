@@ -189,7 +189,7 @@
 * Commenting
 * ===========================
 * C/C++/Java comments are permitted.
-* In addition, any words, spaces, or marks after # or % or ;
+* In addition, any words, spaces, or marks after # or ;
 * are ignored
 *
 ********************************************************************/

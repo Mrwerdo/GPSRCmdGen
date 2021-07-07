@@ -43,7 +43,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
         private static Grammar LoadDefaultGrammar()
         {
             var grammar = new Grammar();
-            var loader = new Grammar.GrammarLoader();
+            var loader = new GrammarLoader();
             var g = loader.LoadText(Resource.CommonRules.Read().Split('\n'), null, false);
             foreach (var rule in g.ProductionRules)
             {
@@ -62,7 +62,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
         {
             if (!Grammars.Any()) return LoadDefaultGrammar();
             var grammar = new Grammar();
-            var loader = new Grammar.GrammarLoader();
+            var loader = new GrammarLoader();
             foreach (var file in Grammars)
             {
                 var g = loader.Load(file, false);

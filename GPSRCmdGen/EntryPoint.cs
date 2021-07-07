@@ -172,7 +172,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
 
         private static Command CreateDatasetCommand(Action<CreateDatasetOptions> handler) {
             var createDataset = new Command("create-dataset") {
-                new Option<string>("--path", getDefaultValue: () => "dataset.csv"),
+                new Option<string>("--path", getDefaultValue: () => null),
                 new Option<bool?>("--overwrite", getDefaultValue: () => null),
                 new Option<int?>("--limit", getDefaultValue: () => null),
                 new Option<int>("--seed", getDefaultValue: () => DateTime.Now.Millisecond),

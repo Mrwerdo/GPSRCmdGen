@@ -48,7 +48,7 @@ namespace RoboCup.AtHome.GPSRCmdGen
 			writer.WriteLine();
             writer.WriteLine(sTask.Trim());
 			writer.WriteLine();
-			writer.Write(task.MetadataDescription(false));
+			writer.Write(task.MetadataDescription(false) ?? "\n");
 			// List<string> remarks = new();
 			// foreach (Token token in task.Tokens)
 			// {

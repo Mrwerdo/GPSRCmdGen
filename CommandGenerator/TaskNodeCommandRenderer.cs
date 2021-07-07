@@ -6,11 +6,11 @@ using System.Linq;
 
 namespace RoboCup.AtHome.CommandGenerator
 {
-	/// <summary>
-	/// Takes a TaskNode tree and renders a command.
-	/// </summary>
-	public static class TaskNodeCommandRenderer
-	{
+    /// <summary>
+    /// Takes a TaskNode tree and renders a command.
+    /// </summary>
+    public static class TaskNodeCommandRenderer
+    {
         public static string? RenderCommand(this TaskNode root)
         {
             if (root.AlternativeExpression is not null) {
@@ -44,6 +44,8 @@ namespace RoboCup.AtHome.CommandGenerator
                     throw new Exception("Cannot render command. The alternative expression is ambiguous.");
                 } else if (nodes.Count() == 1) {
                     return RenderCommand(nodes.First());
+                } else if (root.Children.Count == 1) {
+                    return RenderCommand(root.Children.First());
                 } else {
                     throw new Exception($"Could not find expression to render node: {root.Value}");
                 }
@@ -89,7 +91,7 @@ namespace RoboCup.AtHome.CommandGenerator
         public static TaskNode DeepestDecendent(this TaskNode node, Func<IEnumerable<TaskNode>, TaskNode> selector) {
             var child = node;
             while (true) {
-				var c = selector(child.Children);
+                var c = selector(child.Children);
                 if (c == null) break;
                 child = c;
             }
