@@ -47,7 +47,8 @@ namespace RoboCup.AtHome.CommandGenerator
                 } else if (root.Children.Count == 1) {
                     return RenderCommand(root.Children.First());
                 } else {
-                    throw new Exception($"Could not find expression to render node: {root.Value}");
+                    return null;
+                    //throw new Exception($"Could not find expression to render node: {root.Value}");
                 }
             }
         }

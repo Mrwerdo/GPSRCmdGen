@@ -101,8 +101,8 @@ namespace RoboCup.AtHome.GPSRCmdGen
                 comments += t.TextWildcard?.Comment ?? "";
             });
             var parseTree = $"Parse Tree:\n{task.PrettyTree()}";
-            var command = $"Command:\n{task.RenderCommand()}";
-
+            var renderedCommand = task.RenderCommand() ?? "Failed to render command: an alternative expression was missing in the parse tree.";
+            var command = $"Command:\n{renderedCommand}";
             var output = $"\n{header}\n\n{sentence}\n\n{comments}\n{parseTree}\n\n{command}\n\n{header}\n";
             Console.WriteLine(output);
         }
